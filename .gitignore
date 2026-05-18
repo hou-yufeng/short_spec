@@ -1,0 +1,31 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local datasets and source PDFs
+/data/
+/Tablets/
+/test_data/
+/training_data_consumer/
+/trainning_data_thinkpad/
+/train_data_DT/
+/train_data_SMB/
+
+# Generated analysis, smoke-test output, and workbooks
+/analysis_output/
+/*_smoke/
+/*_smoke*/
+*.xlsx
+*_manifest.json
+*_summary.json
+*.log
+
+# Portable delivery artifacts kept locally, not in source control
+/release/
+/short_spec_generator/
+/shortspec_green_portable/
+/shortspec_portable_clean/
+/run_generate_shortspec_excel_from_dir_rule_based*.bat
+*.7z
+*.zip
+portable_python_runtime.zip
