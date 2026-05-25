@@ -58,6 +58,16 @@ SUMMARY_LAUNCHERS = [
         "output": "shortspecs_rule_based_tablet_summary.xlsx",
         "extra_options": True,
     },
+    {
+        "bat": "run_generate_shortspec_excel_from_dir_rule_based_summary_thinkstation.bat",
+        "release_bat": "short_spec_generator_thinkstation.bat",
+        "title": "Lenovo ThinkStation ShortSpec Rule-Based Summary",
+        "script": "batch_generate_shortspec_excel_rule_based_thinkstation.py",
+        "runtime_text": "runtime_spec_text_rule_based_thinkstation",
+        "generated_text": "generated_shortspec_batch_rule_based_thinkstation",
+        "output": "shortspecs_rule_based_thinkstation_summary.xlsx",
+        "extra_options": False,
+    },
 ]
 
 
@@ -261,6 +271,7 @@ def write_release_readme(target_dir: Path) -> None:
                 "- short_spec_generator_smb_laptops.bat",
                 "- short_spec_generator_desktop.bat",
                 "- short_spec_generator_tablet.bat",
+                "- short_spec_generator_thinkstation.bat",
                 "",
                 "The shortspec_portable_clean folder is required and must stay next to the launchers.",
                 "",

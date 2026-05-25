@@ -25,6 +25,7 @@ Only the summary launcher `.bat` files are delivered at the package top level:
 - `short_spec_generator_smb_laptops.bat`
 - `short_spec_generator_desktop.bat`
 - `short_spec_generator_tablet.bat`
+- `short_spec_generator_thinkstation.bat`
 
 The launchers expect the sibling `shortspec_portable_clean/` runtime folder from the same release package.
 
