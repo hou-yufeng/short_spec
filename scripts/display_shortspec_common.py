@@ -77,6 +77,13 @@ DISPLAY_STOP_LABELS = {
 
 NEGATIVE_VALUES = {"", "-", "/", "N/A", "TBD", "None", "No support", "Non-touch"}
 
+REFRESH_RATE_RE = re.compile(
+    r"\b(?:\d+\s*-\s*\d+\s*Hz|\d+\s*Hz(?:\s*/\s*\d+\s*Hz)?)"
+    r"(?:\s+(?:AMD\s+FreeSync(?:\s+Premium)?|FreeSync(?:\s+Premium)?|NVIDIA\s+G-SYNC|"
+    r"G-SYNC|Adaptive[- ]?Sync|Variable\s+Refresh\s+Rate|Dynamic\s+Refresh\s+Rate|VRR))?",
+    flags=re.I,
+)
+
 
 @dataclass(frozen=True)
 class DisplayToolConfig:
@@ -249,6 +256,14 @@ def normalize_brightness(value: str) -> str:
     return re.sub(r"\s+", " ", value).strip(" ,")
 
 
+def normalize_refresh_rate(value: str) -> str:
+    value = clean_fragment(value)
+    value = re.sub(r"\s*-\s*", "-", value)
+    value = re.sub(r"\s*/\s*", " / ", value)
+    value = re.sub(r"\bVRR\b", "VRR", value, flags=re.I)
+    return re.sub(r"\s+", " ", value).strip(" ,")
+
+
 def clean_fragment(value: str) -> str:
     value = clean_line(value)
     value = re.sub(r"\b(?:N/A|TBD|Non-touch)\b", "", value, flags=re.I)
@@ -339,13 +354,12 @@ def parse_display_offering(tokens: list[str]) -> str:
     aspect = aspect_match.group(0) if aspect_match else ""
     gamut_values = re.findall(r"\d+%\s*(?:NTSC|sRGB|DCI-P3|Adobe RGB)", rest, flags=re.I)
     gamut = " / ".join(unique_preserve(clean_fragment(value) for value in gamut_values))
-    refresh_values = re.findall(r"\d+\s*Hz", rest, flags=re.I)
-    refresh = " / ".join(unique_preserve(clean_fragment(value) for value in refresh_values))
+    refresh_matches = list(REFRESH_RATE_RE.finditer(rest))
+    refresh = " / ".join(unique_preserve(normalize_refresh_rate(match.group(0)) for match in refresh_matches))
 
     tail_start = 0
-    if refresh_values:
-        refresh_iter = list(re.finditer(r"\d+\s*Hz", rest, flags=re.I))
-        tail_start = refresh_iter[-1].end()
+    if refresh_matches:
+        tail_start = refresh_matches[-1].end()
     elif gamut_values:
         gamut_iter = list(re.finditer(r"\d+%\s*(?:NTSC|sRGB|DCI-P3|Adobe RGB)", rest, flags=re.I))
         tail_start = gamut_iter[-1].end()
