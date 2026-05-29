@@ -83,6 +83,7 @@ BRIGHTNESS_RE = re.compile(rf"\b{NITS_VALUE_RE}\s*nits(?:\s*\([^)]+\))?", flags=
 
 REFRESH_RATE_RE = re.compile(
     r"\b(?:\d+\s*-\s*\d+\s*Hz|\d+\s*Hz(?:\s*/\s*\d+\s*Hz)?)"
+    r"(?:\s*\([^)]+\))?"
     r"(?:\s+(?:AMD\s+FreeSync(?:\s+Premium)?|FreeSync(?:\s+Premium)?|NVIDIA\s+G-SYNC|"
     r"G-SYNC|Adaptive[- ]?Sync|Variable\s+Refresh\s+Rate|Dynamic\s+Refresh\s+Rate|VRR))?",
     flags=re.I,
@@ -266,6 +267,61 @@ def normalize_display_tokens(tokens: Iterable[str]) -> list[str]:
     return merged
 
 
+def sequence_token(value: str) -> str:
+    value = clean_line(value).lower()
+    value = re.sub(r"[^a-z0-9+<]+", " ", value)
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def find_key_continuation_index(tokens: list[str]) -> int | None:
+    for index, token in enumerate(tokens):
+        cleaned = clean_line(token).strip(" ,")
+        if not re.fullmatch(r"(?:\d{3,4}|[1-9],\d{3})", cleaned):
+            continue
+        following = " ".join(tokens[index : index + 5]).lower()
+        if any(word in following for word in ("corning", "gorilla", "dolby", "vision", "pantone", "eyesafe", "tuv")):
+            return index
+    return None
+
+
+def find_duplicate_key_prefix_start(tokens: list[str]) -> int | None:
+    normalized = [sequence_token(token) for token in tokens]
+    key_markers = {"puresight", "eyesafe", "dolby", "tuv", "displayhdr", "corning", "x rite", "pantone"}
+    for start in range(5, len(tokens) - 2):
+        suffix = normalized[start:]
+        if len(suffix) < 3:
+            continue
+        if not any(marker in " ".join(suffix) for marker in key_markers):
+            continue
+        for previous in range(1, start):
+            if normalized[previous : previous + len(suffix)] == suffix:
+                return start
+    return None
+
+
+def repair_cross_page_key_prefixes(offerings: list[list[str]]) -> list[list[str]]:
+    repaired: list[list[str]] = []
+    pending_prefix: list[str] = []
+    for index, offering in enumerate(offerings):
+        current = list(offering)
+        if pending_prefix:
+            continuation_index = find_key_continuation_index(current)
+            if continuation_index is None:
+                current.extend(pending_prefix)
+            else:
+                current = current[:continuation_index] + pending_prefix + current[continuation_index:]
+            pending_prefix = []
+
+        if index + 1 < len(offerings) and find_key_continuation_index(offerings[index + 1]) is not None:
+            duplicate_start = find_duplicate_key_prefix_start(current)
+            if duplicate_start is not None:
+                pending_prefix = current[duplicate_start:]
+                current = current[:duplicate_start]
+
+        repaired.append(current)
+    return repaired
+
+
 def group_display_offerings(tokens: list[str]) -> list[list[str]]:
     offerings: list[list[str]] = []
     current: list[str] = []
@@ -283,7 +339,7 @@ def group_display_offerings(tokens: list[str]) -> list[list[str]]:
             current.append(token)
     if current:
         offerings.append(current)
-    return offerings
+    return repair_cross_page_key_prefixes(offerings)
 
 
 def normalize_brightness(value: str) -> str:

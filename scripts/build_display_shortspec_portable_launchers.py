@@ -286,13 +286,25 @@ def zip_release(target_dir: Path) -> Path:
     ensure_inside(zip_path, target_dir.parent)
     if zip_path.exists():
         zip_path.unlink()
-    archive = shutil.make_archive(
-        str(target_dir),
-        "zip",
-        root_dir=target_dir.parent,
-        base_dir=target_dir.name,
-    )
-    return Path(archive)
+
+    generated_workbooks = {config["output"] for config in DISPLAY_LAUNCHERS}
+    generated_outputs = set(generated_workbooks)
+    generated_outputs.update(Path(name).with_suffix(".json").name for name in generated_workbooks)
+
+    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        for path in target_dir.rglob("*"):
+            if path.is_dir():
+                continue
+            relative = path.relative_to(target_dir)
+            if path.name.startswith("~$"):
+                continue
+            if relative.parts and relative.parts[0] == "analysis_output":
+                continue
+            if len(relative.parts) == 1 and path.name in generated_outputs:
+                continue
+            archive.write(path, Path(target_dir.name, relative).as_posix())
+
+    return zip_path
 
 
 def main() -> None:
