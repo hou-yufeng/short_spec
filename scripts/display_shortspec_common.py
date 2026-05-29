@@ -76,6 +76,7 @@ DISPLAY_STOP_LABELS = {
 }
 
 NEGATIVE_VALUES = {"", "-", "/", "N/A", "TBD", "None", "No support", "Non-touch"}
+PAGE_HEADER_TOKENS = {"psref", "product specifications", "reference"}
 
 NITS_VALUE_RE = r"(?:\d{1,3}(?:,\d{3})+|\d+)"
 BRIGHTNESS_RE = re.compile(rf"\b{NITS_VALUE_RE}\s*nits(?:\s*\([^)]+\))?", flags=re.I)
@@ -145,12 +146,26 @@ def is_display_header_line(line: str) -> bool:
 
 def is_noise_line(line: str) -> bool:
     cleaned = clean_line(line)
-    lowered = cleaned.lower()
     if cleaned in NEGATIVE_VALUES:
+        return True
+    if is_page_noise_line(cleaned):
         return True
     if is_display_header_line(cleaned):
         return True
-    if re.match(r"^\d+ of \d+", lowered):
+    return False
+
+
+def is_page_noise_line(line: str) -> bool:
+    cleaned = clean_line(line)
+    lowered = cleaned.lower()
+    token = label_token(cleaned)
+    if cleaned in NEGATIVE_VALUES:
+        return True
+    if token in PAGE_HEADER_TOKENS:
+        return True
+    if re.match(r"^\d+\s+of\s+\d+", lowered):
+        return True
+    if "psref" in lowered and "product specifications" in lowered:
         return True
     if lowered.startswith(("feature with ", "please refer", "lenovo reserves", "the system ")):
         return True
@@ -159,6 +174,18 @@ def is_noise_line(line: str) -> bool:
     if "product specifications reference" in lowered:
         return True
     return False
+
+
+def is_page_title_before_header(lines: list[str], index: int) -> bool:
+    if index + 1 >= len(lines):
+        return False
+    next_token = label_token(lines[index + 1])
+    if next_token != "psref":
+        return False
+    current = clean_line(lines[index])
+    if re.match(r'^\d+(?:\.\d+)?"|^[0-9.]+\'\'', current):
+        return False
+    return bool(re.search(r"\d", current))
 
 
 def find_display_start(lines: list[str]) -> int | None:
@@ -178,15 +205,19 @@ def extract_display_block(spec_text: str) -> list[str]:
     stop_tokens = {label_token(label) for label in DISPLAY_STOP_LABELS}
     block: list[str] = []
     data_started = False
-    for line in lines[start + 1 :]:
+    for index, line in enumerate(lines[start + 1 :], start=start + 1):
         token = label_token(line)
         if token in stop_tokens:
             break
+        if is_page_noise_line(line) or is_page_title_before_header(lines, index):
+            continue
         if re.match(r'^\d+(?:\.\d+)?"|^[0-9.]+\'\'', line):
             data_started = True
         if not data_started:
             if not is_noise_line(line):
                 block.append(line)
+            continue
+        if is_display_header_line(line) and label_token(line) != "touch":
             continue
         if clean_line(line) not in {"", "-", "/", "N/A", "TBD", "None", "No support"}:
             block.append(line)
@@ -283,6 +314,7 @@ def strip_touch_terms(value: str) -> tuple[str, bool]:
     value = re.sub(r"\bNon[- ]?touch\b", " ", value, flags=re.I)
     value = re.sub(r"\b(?:Multi[- ]?touch|On[- ]?cell\s*touch|Oncell\s*touch|In[- ]?cell\s*touch|Incell\s*touch)\b", " ", value, flags=re.I)
     value = re.sub(r"\b(?:Add[- ]?on\s*Film\s*touch|Addon\s*Film\s*touch|OGS|OGM|On[- ]?cell|Oncell|In[- ]?cell|Incell|Add[- ]?on Film|Addon Film|GF2)\b", " ", value, flags=re.I)
+    value = re.sub(r"\btouch\b", " ", value, flags=re.I)
     value = re.sub(r"\s+", " ", value).strip(" ,")
     return value, touch
 
@@ -356,7 +388,7 @@ def parse_display_offering(tokens: list[str]) -> str:
             surface = clean_fragment(surface_match.group(0))
 
     aspect = aspect_match.group(0) if aspect_match else ""
-    gamut_values = re.findall(r"\d+%\s*(?:NTSC|sRGB|DCI-P3|Adobe RGB)", rest, flags=re.I)
+    gamut_values = re.findall(r"\d+%\s*(?:NTSC|sRGB|DCI-P3|P3|Adobe RGB)", rest, flags=re.I)
     gamut = " / ".join(unique_preserve(clean_fragment(value) for value in gamut_values))
     refresh_matches = list(REFRESH_RATE_RE.finditer(rest))
     refresh = " / ".join(unique_preserve(normalize_refresh_rate(match.group(0)) for match in refresh_matches))
@@ -365,7 +397,7 @@ def parse_display_offering(tokens: list[str]) -> str:
     if refresh_matches:
         tail_start = refresh_matches[-1].end()
     elif gamut_values:
-        gamut_iter = list(re.finditer(r"\d+%\s*(?:NTSC|sRGB|DCI-P3|Adobe RGB)", rest, flags=re.I))
+        gamut_iter = list(re.finditer(r"\d+%\s*(?:NTSC|sRGB|DCI-P3|P3|Adobe RGB)", rest, flags=re.I))
         tail_start = gamut_iter[-1].end()
     elif aspect_match:
         tail_start = aspect_match.end()
