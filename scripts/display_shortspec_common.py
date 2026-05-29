@@ -77,6 +77,9 @@ DISPLAY_STOP_LABELS = {
 
 NEGATIVE_VALUES = {"", "-", "/", "N/A", "TBD", "None", "No support", "Non-touch"}
 
+NITS_VALUE_RE = r"(?:\d{1,3}(?:,\d{3})+|\d+)"
+BRIGHTNESS_RE = re.compile(rf"\b{NITS_VALUE_RE}\s*nits(?:\s*\([^)]+\))?", flags=re.I)
+
 REFRESH_RATE_RE = re.compile(
     r"\b(?:\d+\s*-\s*\d+\s*Hz|\d+\s*Hz(?:\s*/\s*\d+\s*Hz)?)"
     r"(?:\s+(?:AMD\s+FreeSync(?:\s+Premium)?|FreeSync(?:\s+Premium)?|NVIDIA\s+G-SYNC|"
@@ -114,6 +117,7 @@ def clean_line(line: str) -> str:
     line = re.sub(r"\bTM\b", "", line)
     line = re.sub(r"\[[0-9,\s]+\]", "", line)
     line = re.sub(r"\s+", " ", line).strip()
+    line = re.sub(r"\b(\d{1,3}),\s+(\d{3})(?=\b)", r"\1,\2", line)
     return line
 
 
@@ -252,7 +256,7 @@ def group_display_offerings(tokens: list[str]) -> list[list[str]]:
 
 
 def normalize_brightness(value: str) -> str:
-    value = re.sub(r"(\d+)\s*nits\b", r"\1 nits", value, flags=re.I)
+    value = re.sub(rf"\b({NITS_VALUE_RE})\s*nits\b", r"\1 nits", value, flags=re.I)
     return re.sub(r"\s+", " ", value).strip(" ,")
 
 
@@ -315,13 +319,13 @@ def parse_display_offering(tokens: list[str]) -> str:
     size = tokens[0]
     segment = " ".join(tokens[1:])
     segment = normalize_display_tokens([segment])[0] if segment else ""
-    segment = re.sub(r"(\d+)\s*nits\b", r"\1 nits", segment, flags=re.I)
+    segment = re.sub(rf"\b({NITS_VALUE_RE})\s*nits\b", r"\1 nits", segment, flags=re.I)
     segment = re.sub(r"\s+", " ", segment).strip()
 
     resolution, rest = extract_resolution(segment)
     rest, has_touch = strip_touch_terms(rest)
 
-    brightness_matches = list(re.finditer(r"\d+\s*nits(?:\s*\([^)]+\))?", rest, flags=re.I))
+    brightness_matches = list(BRIGHTNESS_RE.finditer(rest))
     first_brightness = brightness_matches[0] if brightness_matches else None
     last_brightness = brightness_matches[-1] if brightness_matches else None
 
