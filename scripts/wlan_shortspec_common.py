@@ -479,6 +479,30 @@ def capability_score(value: str, brand_model: str, bluetooth_version: str) -> in
     return score
 
 
+def channel_width_score(value: str) -> int:
+    widths = [int(match) for match in re.findall(r"\b(160|240|320)MHz\b", value, flags=re.I)]
+    return max(widths, default=0)
+
+
+def stream_score(value: str) -> int:
+    scores = {"1x1": 1, "2x2": 2, "3x3": 3, "4x4": 4}
+    matched = [score for token, score in scores.items() if re.search(rf"\b{token}\b", value, flags=re.I)]
+    return max(matched, default=0)
+
+
+def technical_spec_key(option: WLANOption) -> tuple[int, int, int, tuple[int, ...]]:
+    return (
+        option.wifi_rank,
+        channel_width_score(option.source),
+        stream_score(option.source),
+        version_key(option.bluetooth_version),
+    )
+
+
+def is_intel_option(option: WLANOption) -> bool:
+    return bool(re.search(r"\bIntel\b", option.brand_model or option.source, flags=re.I))
+
+
 def parse_wlan_option(value: str, index: int) -> WLANOption | None:
     value = clean_output(value)
     if not value:
@@ -514,11 +538,21 @@ def option_identity(option: WLANOption) -> tuple[str, str, str]:
     return (option.brand_model.lower(), option.wifi_generation.lower(), option.bluetooth_version)
 
 
+def highest_spec_options(options: list[WLANOption]) -> list[WLANOption]:
+    if not options:
+        return []
+    max_key = max(technical_spec_key(option) for option in options)
+    return [option for option in options if technical_spec_key(option) == max_key]
+
+
 def choose_best_option(options: list[WLANOption]) -> WLANOption | None:
     if not options:
         return None
+    highest_options = highest_spec_options(options)
+    intel_options = [option for option in highest_options if is_intel_option(option)]
+    candidate_options = intel_options or highest_options
     return max(
-        options,
+        candidate_options,
         key=lambda option: (
             option.wifi_rank,
             option.capability_score,
@@ -529,9 +563,14 @@ def choose_best_option(options: list[WLANOption]) -> WLANOption | None:
     )
 
 
-def render_wlan_option(option: WLANOption, *, up_to: bool) -> str:
+def should_suppress_brand_model(options: list[WLANOption]) -> bool:
+    highest_options = highest_spec_options(options)
+    return len(highest_options) >= 2 and not any(is_intel_option(option) for option in highest_options)
+
+
+def render_wlan_option(option: WLANOption, *, up_to: bool, include_brand_model: bool = True) -> str:
     pieces: list[str] = []
-    if option.brand_model:
+    if include_brand_model and option.brand_model:
         pieces.append(option.brand_model)
     if option.wifi_generation:
         pieces.append(option.wifi_generation)
@@ -569,7 +608,11 @@ def build_wlan_short_specs(spec_text: str) -> list[str]:
     if not best:
         return []
 
-    rendered = render_wlan_option(best, up_to=len(unique_options) >= 2)
+    rendered = render_wlan_option(
+        best,
+        up_to=len(unique_options) >= 2,
+        include_brand_model=not should_suppress_brand_model(unique_options),
+    )
     if not rendered:
         return []
     if re.search(r"\b(?:N/A|TBD|Non-touch|TM|vPro|802\.11|1x1|2x2|3x3|4x4|Dual Band|M\.?2\s+card)\b|[™®]", rendered, flags=re.I):
