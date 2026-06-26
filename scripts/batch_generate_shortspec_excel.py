@@ -31,6 +31,8 @@ TOP_LEVEL_FEATURES = {
     "ACCESSORIES",
     "CERTIFICATIONS",
 }
+
+PDF_PAGE_BREAK = "__SHORTSPEC_PAGE_BREAK__"
 L2_FEATURES = {
     "Processor",
     "AI PC Category",
@@ -129,7 +131,7 @@ Function NormalizeText(text)
     text = Replace(text, vbCrLf, vbLf)
     text = Replace(text, vbCr, vbLf)
     text = Replace(text, Chr(7), "")
-    text = Replace(text, Chr(12), vbLf)
+    text = Replace(text, Chr(12), vbLf & "__SHORTSPEC_PAGE_BREAK__" & vbLf)
     NormalizeText = text
 End Function
 
@@ -228,6 +230,16 @@ def normalize_text(text: str) -> str:
     text = text.replace("\x0c", "\n")
     text = text.replace("\r\n", "\n").replace("\r", "\n")
     return text
+
+
+def is_pdf_page_break(value: str) -> bool:
+    return value.strip() == PDF_PAGE_BREAK
+
+
+def join_pdf_page_texts(page_texts: Iterable[str]) -> str:
+    pages = [normalize_text(text or "").strip() for text in page_texts]
+    pages = [page for page in pages if page]
+    return normalize_text(f"\n{PDF_PAGE_BREAK}\n".join(pages))
 
 
 def derive_product_name(path: Path) -> str:

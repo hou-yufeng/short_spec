@@ -14,9 +14,12 @@ if VENDOR_PDF_DEPS.exists():
 
 from batch_generate_shortspec_excel import (
     GenerationResult,
+    PDF_PAGE_BREAK,
     collect_spec_paths,
     derive_display_name,
     derive_product_name,
+    is_pdf_page_break,
+    join_pdf_page_texts,
     normalize_text,
     ProductSpec,
     save_generation_texts,
@@ -90,6 +93,9 @@ REFRESH_RATE_RE = re.compile(
 )
 
 
+HTML_DISPLAY_TABLE_ROW_PREFIX = "__HTML_DISPLAY_TABLE_ROW__"
+
+
 @dataclass(frozen=True)
 class DisplayToolConfig:
     product_line: str
@@ -97,6 +103,10 @@ class DisplayToolConfig:
     runtime_text_dir: str
     generated_text_dir: str
     output_xlsx: str
+
+
+def is_page_break_line(line: str) -> bool:
+    return is_pdf_page_break(clean_line(line))
 
 
 def clean_line(line: str) -> str:
@@ -110,9 +120,8 @@ def clean_line(line: str) -> str:
     line = line.replace("庐", "")
     line = line.replace("鈩?", "")
     line = line.replace("鈩", "")
-    line = line.replace("T脺V", "TUV")
-    line = line.replace("T眉V", "TUV")
-    line = line.replace("TÜV", "TUV")
+    line = line.replace("T脺V", "TÜV")
+    line = line.replace("T眉V", "TÜV")
     line = line.replace("掳", "°")
     line = line.replace("™", "")
     line = line.replace("®", "")
@@ -158,6 +167,10 @@ def is_noise_line(line: str) -> bool:
 
 def is_page_noise_line(line: str) -> bool:
     cleaned = clean_line(line)
+    if not cleaned:
+        return True
+    if is_page_break_line(cleaned):
+        return True
     lowered = cleaned.lower()
     token = label_token(cleaned)
     if cleaned in NEGATIVE_VALUES:
@@ -210,6 +223,10 @@ def extract_display_block(spec_text: str) -> list[str]:
         token = label_token(line)
         if token in stop_tokens:
             break
+        if is_page_break_line(line):
+            if block:
+                block.append(PDF_PAGE_BREAK)
+            continue
         if is_page_noise_line(line) or is_page_title_before_header(lines, index):
             continue
         if re.match(r'^\d+(?:\.\d+)?"|^[0-9.]+\'\'', line):
@@ -231,16 +248,23 @@ def normalize_display_tokens(tokens: Iterable[str]) -> list[str]:
     index = 0
     while index < len(normalized):
         token = normalized[index]
+        if is_pdf_page_break(token):
+            index += 1
+            continue
 
-        while token.count("(") > token.count(")") and index + 1 < len(normalized):
+        while (
+            token.count("(") > token.count(")")
+            and index + 1 < len(normalized)
+            and not is_pdf_page_break(normalized[index + 1])
+        ):
             index += 1
             token = f"{token} {normalized[index]}".strip()
 
-        while token.endswith("-") and index + 1 < len(normalized):
+        while token.endswith("-") and index + 1 < len(normalized) and not is_pdf_page_break(normalized[index + 1]):
             index += 1
             token = f"{token}{normalized[index]}".strip()
 
-        if re.fullmatch(r"\d+%", token) and index + 1 < len(normalized):
+        if re.fullmatch(r"\d+%", token) and index + 1 < len(normalized) and not is_pdf_page_break(normalized[index + 1]):
             next_token = normalized[index + 1]
             if re.match(r"^(?:NTSC|sRGB|DCI-P3|Adobe RGB)$", next_token, flags=re.I):
                 index += 1
@@ -258,6 +282,7 @@ def normalize_display_tokens(tokens: Iterable[str]) -> list[str]:
         token = token.replace("In- cell", "In-cell")
         token = token.replace("Add- on", "Add-on")
         token = token.replace("Paper- like", "Paper-like")
+        token = token.replace("TÜV, Low Blue Light", "TÜV Low Blue Light")
         token = token.replace("TUV, Low Blue Light", "TUV Low Blue Light")
         token = token.replace("Antiglare", "Anti-glare")
         token = re.sub(r"\s+", " ", token).strip()
@@ -322,14 +347,68 @@ def repair_cross_page_key_prefixes(offerings: list[list[str]]) -> list[list[str]
     return repaired
 
 
+def split_embedded_size_token(token: str) -> tuple[str, str] | None:
+    match = re.search(r'(?P<size>\d+(?:\.\d+)?"|[0-9.]+\'\')\s*(?P<rest>.*)$', token)
+    if not match or match.start() == 0:
+        return None
+    prefix = token[: match.start()].strip(" ,")
+    suffix = token[match.start() :].strip(" ,")
+    if not prefix or not suffix:
+        return None
+    return prefix, suffix
+
+
+def trailing_key_feature_continuation(tokens: list[str]) -> list[str]:
+    continuation: list[str] = []
+    index = len(tokens) - 1
+    while index >= 0 and len(continuation) < 3:
+        token = clean_line(tokens[index]).strip(" ,")
+        if not re.fullmatch(r"[A-Za-zÜü][A-Za-zÜü -]{1,24}", token):
+            break
+        if re.search(
+            r"\b(?:Certification|Certified|free|Black|Vision|Dimming|Calibration|Light|Blue|Low|Eyesafe|TÜV|TUV|Flicker)\b",
+            token,
+            flags=re.I,
+        ):
+            continuation.insert(0, token)
+            index -= 1
+            continue
+        break
+    return continuation
+
+
+def attach_cross_page_prefix(offering: list[str], prefix_tokens: list[str]) -> list[str]:
+    if not offering or not prefix_tokens:
+        return offering
+
+    current = list(offering)
+    prefix = list(prefix_tokens)
+    if prefix[-1].endswith("-"):
+        continuation = trailing_key_feature_continuation(current)
+        if continuation:
+            current = current[: -len(continuation)]
+            prefix[-1] = f"{prefix[-1]}{' '.join(continuation)}"
+    return [*current, *prefix]
+
+
 def group_display_offerings(tokens: list[str]) -> list[list[str]]:
     offerings: list[list[str]] = []
     current: list[str] = []
+    cross_page_prefix: list[str] = []
     for token in tokens:
+        embedded = split_embedded_size_token(token)
+        if embedded:
+            prefix, token = embedded
+            if current:
+                offerings.append(attach_cross_page_prefix(current, cross_page_prefix))
+            cross_page_prefix = [*cross_page_prefix, prefix]
+            current = []
+
         match = re.match(r'^(?P<size>\d+(?:\.\d+)?"|[0-9.]+\'\')\s*(?P<rest>.*)$', token)
         if match:
             if current:
-                offerings.append(current)
+                offerings.append(attach_cross_page_prefix(current, cross_page_prefix))
+                cross_page_prefix = []
             current = [match.group("size")]
             rest = match.group("rest").strip(" ,")
             if rest:
@@ -337,8 +416,10 @@ def group_display_offerings(tokens: list[str]) -> list[list[str]]:
             continue
         if current:
             current.append(token)
+        else:
+            cross_page_prefix.append(token)
     if current:
-        offerings.append(current)
+        offerings.append(attach_cross_page_prefix(current, cross_page_prefix))
     return repair_cross_page_key_prefixes(offerings)
 
 
@@ -394,10 +475,23 @@ def extract_resolution(rest: str) -> tuple[str, str]:
     return "", rest
 
 
-def remove_viewing_angle(value: str) -> str:
+def _legacy_remove_viewing_angle(value: str) -> str:
     value = re.sub(r"(?:\d{1,3}°\s*/\s*){3}\d{1,3}°", " ", value)
     value = re.sub(r"horizontal:\s*\+/?-?\s*\d{1,3}°?,\s*vertical:\s*\+/?-?\s*\d{1,3}°?", " ", value, flags=re.I)
     value = re.sub(r"\b\d{1,3}°\s*/\s*\d{1,3}°\b", " ", value)
+    return re.sub(r"\s+", " ", value).strip(" ,")
+
+
+def remove_viewing_angle(value: str) -> str:
+    degree = r"(?:°|掳|бу|Ёу|\?\?|deg(?:rees?)?)?"
+    value = re.sub(rf"(?:\d{{1,3}}\s*{degree}\s*/\s*){{3}}\d{{1,3}}\s*{degree}", " ", value)
+    value = re.sub(
+        rf"horizontal:\s*\+/?-?\s*\d{{1,3}}\s*{degree}\s*,\s*vertical:\s*\+/?-?\s*\d{{1,3}}\s*{degree}",
+        " ",
+        value,
+        flags=re.I,
+    )
+    value = re.sub(rf"\b\d{{1,3}}\s*{degree}\s*/\s*\d{{1,3}}\s*{degree}\b", " ", value)
     return re.sub(r"\s+", " ", value).strip(" ,")
 
 
@@ -493,7 +587,92 @@ def unique_preserve(values: Iterable[str]) -> list[str]:
     return result
 
 
+def extract_html_display_table_rows(spec_text: str) -> list[dict[str, str]]:
+    rows: list[dict[str, str]] = []
+    for line in spec_text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith(HTML_DISPLAY_TABLE_ROW_PREFIX):
+            continue
+        payload = stripped[len(HTML_DISPLAY_TABLE_ROW_PREFIX) :].lstrip("\t ")
+        if not payload:
+            continue
+        try:
+            value = json.loads(payload)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            rows.append({str(key): clean_line(str(cell)) for key, cell in value.items()})
+    return rows
+
+
+def html_display_field(row: dict[str, str], *names: str) -> str:
+    wanted = {label_token(name) for name in names}
+    for key, value in row.items():
+        if label_token(key) in wanted:
+            return clean_line(value)
+    return ""
+
+
+def html_display_has_touch(value: str) -> bool:
+    cleaned = clean_fragment(value)
+    if not cleaned:
+        return False
+    if re.search(r"\b(?:non[- ]?touch|none|no support|n/a|tbd)\b", cleaned, flags=re.I):
+        return False
+    return True
+
+
+def normalize_html_display_field(value: str) -> str:
+    value = clean_fragment(value)
+    value = re.sub(r"\s*/\s*", " / ", value)
+    return re.sub(r"\s+", " ", value).strip(" ,")
+
+
+def normalize_html_display_brightness(value: str) -> str:
+    value = normalize_html_display_field(value)
+    value = re.sub(rf"\b({NITS_VALUE_RE})\s*nits\b", r"\1 nits", value, flags=re.I)
+    return re.sub(r"\s+", " ", value).strip(" ,")
+
+
+def normalize_html_display_refresh(value: str) -> str:
+    value = normalize_html_display_field(value)
+    value = re.sub(r"\s*-\s*", "-", value)
+    return re.sub(r"\s+", " ", value).strip(" ,")
+
+
+def render_html_display_table_row(row: dict[str, str]) -> str:
+    size = normalize_html_display_field(html_display_field(row, "Size"))
+    resolution = normalize_html_display_field(html_display_field(row, "Resolution"))
+    touch = html_display_field(row, "Touch")
+    display_type = normalize_html_display_field(html_display_field(row, "Type"))
+    brightness = normalize_html_display_brightness(html_display_field(row, "Brightness"))
+    surface = normalize_html_display_field(html_display_field(row, "Surface"))
+    color_gamut = normalize_html_display_field(html_display_field(row, "Color Gamut", "Gamut"))
+    refresh = normalize_html_display_refresh(html_display_field(row, "Refresh Rate", "Refresh"))
+    aspect = normalize_html_display_field(html_display_field(row, "Aspect Ratio", "Aspect"))
+    key_features = normalize_html_display_field(remove_viewing_angle(html_display_field(row, "Key Features", "Features")))
+
+    if html_display_has_touch(touch):
+        if display_type and not re.search(r"\btouch\b", display_type, flags=re.I):
+            display_type = f"{display_type} touch"
+        elif not display_type:
+            display_type = "touch"
+
+    first_part = " ".join(part for part in [size, resolution, display_type] if part)
+    parts = [first_part, brightness, surface, color_gamut, refresh, aspect, key_features]
+    rendered = ", ".join(part for part in (clean_fragment(part) for part in parts) if part and part not in NEGATIVE_VALUES)
+    rendered = re.sub(r"\s+", " ", rendered).strip(" ,.")
+    if re.search(r"\b(?:N/A|TBD)\b", rendered, flags=re.I):
+        return ""
+    return rendered
+
+
 def build_display_short_specs(spec_text: str) -> list[str]:
+    html_rows = extract_html_display_table_rows(spec_text)
+    if html_rows:
+        rendered = [render_html_display_table_row(row) for row in html_rows]
+        return unique_preserve(value for value in rendered if value)
+
     block = extract_display_block(spec_text)
     offerings = group_display_offerings(block)
     rendered = [parse_display_offering(offering) for offering in offerings]
@@ -531,7 +710,7 @@ def read_pdf_text(path: Path) -> str:
         raise RuntimeError("pypdf is not installed and no cached Display text was available.") from exc
 
     reader = PdfReader(str(path))
-    return normalize_text("\n".join(page.extract_text() or "" for page in reader.pages))
+    return join_pdf_page_texts(page.extract_text() or "" for page in reader.pages)
 
 
 def load_display_product_specs(paths: list[Path], runtime_text_dir: Path) -> list[ProductSpec]:

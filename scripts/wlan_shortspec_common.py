@@ -14,11 +14,14 @@ if VENDOR_PDF_DEPS.exists():
 
 from batch_generate_shortspec_excel import (
     GenerationResult,
+    PDF_PAGE_BREAK,
     ProductSpec,
     collect_spec_paths,
     derive_display_name,
     derive_product_name,
     extract_pdf_texts,
+    is_pdf_page_break,
+    join_pdf_page_texts,
     normalize_text,
     save_generation_texts,
     write_xlsx,
@@ -42,6 +45,7 @@ class WLANOption:
     wifi_generation: str
     wifi_rank: int
     bluetooth_version: str
+    bluetooth_hardware_ready: bool
     capability_score: int
 
 
@@ -167,6 +171,11 @@ KNOWN_BRANDS = (
 )
 
 NEGATIVE_VALUES = {"", "-", "/", "N/A", "TBD", "None", "No support", "Non-touch"}
+HTML_SOURCE_MARKER = "__HTML_SOURCE_SPEC__"
+
+
+def is_page_break_line(line: str) -> bool:
+    return is_pdf_page_break(clean_line(line))
 
 
 def clean_line(line: str) -> str:
@@ -219,6 +228,8 @@ STOP_LABEL_KEYS = {label_key(label) for label in STOP_LABELS}
 def is_page_noise_line(line: str) -> bool:
     cleaned = clean_line(line)
     if not cleaned:
+        return True
+    if is_page_break_line(cleaned):
         return True
     lowered = cleaned.lower()
     token = label_key(cleaned)
@@ -318,6 +329,9 @@ def should_merge_continuation(previous: str, current: str) -> bool:
 def normalize_wlan_tokens(tokens: Iterable[str]) -> list[str]:
     fragments: list[str] = []
     for token in tokens:
+        if is_page_break_line(token):
+            fragments.append(PDF_PAGE_BREAK)
+            continue
         for fragment in split_option_fragments(token):
             if not fragment or is_page_noise_line(fragment):
                 continue
@@ -326,11 +340,16 @@ def normalize_wlan_tokens(tokens: Iterable[str]) -> list[str]:
             fragments.append(fragment)
 
     merged: list[str] = []
+    blocked_by_page_break = False
     for fragment in fragments:
-        if merged and should_merge_continuation(merged[-1], fragment):
+        if is_pdf_page_break(fragment):
+            blocked_by_page_break = True
+            continue
+        if merged and not blocked_by_page_break and should_merge_continuation(merged[-1], fragment):
             merged[-1] = clean_line(f"{merged[-1]} {fragment}").strip(" ,")
         else:
             merged.append(fragment)
+        blocked_by_page_break = False
     return merged
 
 
@@ -388,19 +407,18 @@ def version_key(version: str) -> tuple[int, ...]:
     return tuple(int(part) for part in re.findall(r"\d+", version))
 
 
-def extract_bluetooth_version(value: str) -> str:
+def extract_bluetooth_info(value: str) -> tuple[str, bool]:
     hardware_ready = re.findall(
-        r"(?:Bluetooth|BT)\s*([0-9]+(?:\.[0-9]+)?)\s*hardware\s+ready",
+        r"(?:Bluetooth|BT)\s*([0-9]+(?:\.[0-9]+)?)(?:\s+is)?\s*hardware\s+ready",
         value,
         flags=re.I,
     )
-    if hardware_ready:
-        return max(hardware_ready, key=version_key)
-
     versions = re.findall(r"(?:Bluetooth|BT)\s*([0-9]+(?:\.[0-9]+)?)", value, flags=re.I)
     if not versions:
-        return ""
-    return max(versions, key=version_key)
+        return "", False
+    highest = max(versions, key=version_key)
+    hardware_ready_versions = {version_key(version) for version in hardware_ready}
+    return highest, version_key(highest) in hardware_ready_versions
 
 
 def extract_wifi_generation(value: str) -> tuple[str, int]:
@@ -518,7 +536,7 @@ def parse_wlan_option(value: str, index: int) -> WLANOption | None:
         return None
 
     wifi_generation, wifi_rank = extract_wifi_generation(value)
-    bluetooth_version = extract_bluetooth_version(value)
+    bluetooth_version, bluetooth_hardware_ready = extract_bluetooth_info(value)
     if not wifi_generation:
         return None
 
@@ -530,12 +548,35 @@ def parse_wlan_option(value: str, index: int) -> WLANOption | None:
         wifi_generation=wifi_generation,
         wifi_rank=wifi_rank,
         bluetooth_version=bluetooth_version,
+        bluetooth_hardware_ready=bluetooth_hardware_ready,
         capability_score=capability_score(value, brand_model, bluetooth_version),
     )
 
 
-def option_identity(option: WLANOption) -> tuple[str, str, str]:
-    return (option.brand_model.lower(), option.wifi_generation.lower(), option.bluetooth_version)
+def is_negative_wlan_option(value: str) -> bool:
+    cleaned = clean_output(value)
+    if not cleaned:
+        return False
+    lowered = cleaned.lower()
+    if lowered in {item.lower() for item in NEGATIVE_VALUES}:
+        return True
+    return bool(
+        re.search(
+            r"\b(?:no|without)\s+(?:wlan|wi-?fi|wireless\s+lan)(?:\s+(?:and|\+)\s+bluetooth)?\b"
+            r"|\b(?:wlan|wi-?fi|wireless\s+lan)(?:\s+(?:and|\+)\s+bluetooth)?\s+(?:not\s+available|not\s+supported|none)\b",
+            lowered,
+            flags=re.I,
+        )
+    )
+
+
+def option_identity(option: WLANOption) -> tuple[str, str, str, bool]:
+    return (
+        option.brand_model.lower(),
+        option.wifi_generation.lower(),
+        option.bluetooth_version,
+        option.bluetooth_hardware_ready,
+    )
 
 
 def highest_spec_options(options: list[WLANOption]) -> list[WLANOption]:
@@ -557,6 +598,7 @@ def choose_best_option(options: list[WLANOption]) -> WLANOption | None:
             option.wifi_rank,
             option.capability_score,
             version_key(option.bluetooth_version),
+            option.bluetooth_hardware_ready,
             bool(option.brand_model),
             -option.index,
         ),
@@ -568,14 +610,23 @@ def should_suppress_brand_model(options: list[WLANOption]) -> bool:
     return len(highest_options) >= 2 and not any(is_intel_option(option) for option in highest_options)
 
 
-def render_wlan_option(option: WLANOption, *, up_to: bool, include_brand_model: bool = True) -> str:
+def render_wlan_option(
+    option: WLANOption,
+    *,
+    up_to: bool,
+    include_brand_model: bool = True,
+    include_bluetooth_hardware_ready: bool = False,
+) -> str:
     pieces: list[str] = []
     if include_brand_model and option.brand_model:
         pieces.append(option.brand_model)
     if option.wifi_generation:
         pieces.append(option.wifi_generation)
     if option.bluetooth_version:
-        pieces.append(f"Bluetooth {option.bluetooth_version}")
+        bluetooth = f"Bluetooth {option.bluetooth_version}"
+        if include_bluetooth_hardware_ready and option.bluetooth_hardware_ready:
+            bluetooth = f"{bluetooth} (hardware ready)"
+        pieces.append(bluetooth)
 
     rendered = ", ".join(pieces)
     rendered = re.sub(r"\b802\.11[a-z0-9/,+ -]*\b", "", rendered, flags=re.I)
@@ -588,6 +639,7 @@ def render_wlan_option(option: WLANOption, *, up_to: bool, include_brand_model: 
 
 
 def build_wlan_short_specs(spec_text: str) -> list[str]:
+    is_html_source = HTML_SOURCE_MARKER in spec_text
     block = extract_wlan_block(spec_text)
     parsed: list[WLANOption] = []
     for index, value in enumerate(block):
@@ -596,7 +648,7 @@ def build_wlan_short_specs(spec_text: str) -> list[str]:
             parsed.append(option)
 
     unique_options: list[WLANOption] = []
-    seen: set[tuple[str, str, str]] = set()
+    seen: set[tuple[str, str, str, bool]] = set()
     for option in parsed:
         identity = option_identity(option)
         if identity in seen:
@@ -608,11 +660,19 @@ def build_wlan_short_specs(spec_text: str) -> list[str]:
     if not best:
         return []
 
+    non_none_count = len(parsed)
+    negative_count = sum(1 for value in block if is_negative_wlan_option(value))
+    single_html_wlan_option = is_html_source and non_none_count == 1
+    optional_html_wlan_option = single_html_wlan_option and negative_count > 0
+
     rendered = render_wlan_option(
         best,
-        up_to=len(unique_options) >= 2,
+        up_to=not single_html_wlan_option,
         include_brand_model=not should_suppress_brand_model(unique_options),
+        include_bluetooth_hardware_ready=is_html_source,
     )
+    if optional_html_wlan_option and rendered:
+        rendered = f"Optional {rendered}"
     if not rendered:
         return []
     if re.search(r"\b(?:N/A|TBD|Non-touch|TM|vPro|802\.11|1x1|2x2|3x3|4x4|Dual Band|M\.?2\s+card)\b|[™®]", rendered, flags=re.I):
@@ -651,7 +711,7 @@ def read_pdf_text(path: Path) -> str:
         raise RuntimeError("pypdf is not installed and no cached WLAN text was available.") from exc
 
     reader = PdfReader(str(path))
-    return normalize_text("\n".join(page.extract_text() or "" for page in reader.pages))
+    return join_pdf_page_texts(page.extract_text() or "" for page in reader.pages)
 
 
 def load_wlan_product_specs(paths: list[Path], runtime_text_dir: Path) -> list[ProductSpec]:
