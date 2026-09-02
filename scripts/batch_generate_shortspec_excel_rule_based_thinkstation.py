@@ -17,6 +17,9 @@ from batch_generate_shortspec_excel import (
     sanitize_sheet_name,
     write_xlsx,
 )
+from keyboard_shortspec_common import summarize_desktop_keyboard_from_lines
+from operating_system_shortspec_common import normalize_operating_system_values
+from special_features_shortspec_common import extract_special_features_from_lines
 
 
 TOP_LEVEL_SECTIONS = [
@@ -25,6 +28,7 @@ TOP_LEVEL_SECTIONS = [
     "CONNECTIVITY",
     "SECURITY & PRIVACY",
     "CERTIFICATIONS",
+    "SPECIAL FEATURES",
 ]
 
 SPEC_TOP_LEVEL_SECTIONS = {
@@ -39,6 +43,7 @@ SPEC_TOP_LEVEL_SECTIONS = {
     "OPERATING REQUIREMENTS",
     "CERTIFICATIONS",
     "SOFTWARE",
+    "SPECIAL FEATURES",
 }
 
 FIELD_LABELS = {
@@ -50,6 +55,7 @@ FIELD_LABELS = {
     "AI PC Category",
     "Operating System",
     "Operating System**",
+    "Special Features",
     "Graphics",
     "Integrated Graphics",
     "Integrated Graphics**",
@@ -80,6 +86,10 @@ FIELD_LABELS = {
     "Power Supply**",
     "Mechanical",
     "Form Factor",
+    "Keyboard",
+    "Keyboard**",
+    "Keyboard Backlight",
+    "Keyboard Backlight**",
     "Dimensions (WxDxH)",
     "Weight",
     "Bays",
@@ -400,21 +410,11 @@ def summarize_processor(lines: list[str]) -> list[str]:
 
 def summarize_operating_system(lines: list[str]) -> list[str]:
     values = filter_values(slice_after_label(lines, ["Operating System**", "Operating System"], ["Graphics"]))
-    result: list[str] = []
-    for value in values:
-        lowered = value.lower()
-        if lowered.startswith("no preload"):
-            continue
-        if value.startswith("Red Hat Certified Hardware"):
-            continue
-        if value.startswith("Red Hat Enterprise Linux"):
-            version = re.search(r"Red Hat Enterprise Linux\s+(\d+(?:\.\d+)?)", value)
-            if version and version.group(1).startswith("10"):
-                value = f"Red Hat Enterprise Linux {version.group(1)} (certified only)"
-            else:
-                value = "Red Hat Enterprise Linux (certified only)"
-        result.append(value)
-    return unique_preserve(result)
+    return normalize_operating_system_values(values)
+
+
+def summarize_special_features(lines: list[str]) -> list[str]:
+    return extract_special_features_from_lines(lines, label_key, is_section_heading)
 
 
 def clean_graphics_support(value: str) -> str:
@@ -837,6 +837,10 @@ def build_thinkstation_rows(product_name: str, spec_text: str) -> list[list[str]
     append_field(rows, "PERFORMANCE", "Storage", summarize_storage(lines))
     append_field(rows, "PERFORMANCE", "Power Supply", summarize_power_supply(lines))
 
+    append_field(rows, "SPECIAL FEATURES", "Special Features", summarize_special_features(lines))
+
+    for value in summarize_desktop_keyboard_from_lines(lines):
+        rows.append(["DESIGN", "Keyboard", value])
     append_field(rows, "DESIGN", "Dimensions (WxDxH)", summarize_simple(lines, ["Dimensions (WxDxH)"], ["Weight"], 1))
     append_field(rows, "DESIGN", "Weight", summarize_simple(lines, ["Weight"], ["Bays", "M.2 Slots", "Expansion Slots", "EOU", "CONNECTIVITY"], 1))
     append_field(rows, "DESIGN", "Bays", summarize_bays(lines))

@@ -570,6 +570,37 @@ def is_negative_wlan_option(value: str) -> bool:
     )
 
 
+def first_two_comma_parts_key(value: str) -> tuple[str, str] | None:
+    cleaned = clean_output(value)
+    if not cleaned or is_negative_wlan_option(cleaned) or not has_wifi_or_bt(cleaned):
+        return None
+    parts = [clean_output(part) for part in cleaned.split(",")]
+    if len(parts) < 2 or not parts[0] or not parts[1]:
+        return None
+    return (parts[0].casefold(), parts[1].casefold())
+
+
+def coalesce_same_wlan_options_by_prefix(values: list[str]) -> list[str]:
+    if len(values) < 2:
+        return values
+
+    keys = [first_two_comma_parts_key(value) for value in values]
+    counts: dict[tuple[str, str], int] = {}
+    for key in keys:
+        if key is not None:
+            counts[key] = counts.get(key, 0) + 1
+
+    output: list[str] = []
+    emitted: set[tuple[str, str]] = set()
+    for value, key in zip(values, keys):
+        if key is not None and counts.get(key, 0) >= 2:
+            if key in emitted:
+                continue
+            emitted.add(key)
+        output.append(value)
+    return output
+
+
 def option_identity(option: WLANOption) -> tuple[str, str, str, bool]:
     return (
         option.brand_model.lower(),
@@ -640,7 +671,7 @@ def render_wlan_option(
 
 def build_wlan_short_specs(spec_text: str) -> list[str]:
     is_html_source = HTML_SOURCE_MARKER in spec_text
-    block = extract_wlan_block(spec_text)
+    block = coalesce_same_wlan_options_by_prefix(extract_wlan_block(spec_text))
     parsed: list[WLANOption] = []
     for index, value in enumerate(block):
         option = parse_wlan_option(value, index)

@@ -216,6 +216,102 @@ class SpecContentTextParser(HTMLParser):
         return title or "Document"
 
 
+class SpecStructureTextParser(HTMLParser):
+    """Collect text from one HTML ``div[specstructure]`` subtree only."""
+
+    def __init__(self, specstructure: str) -> None:
+        super().__init__(convert_charrefs=True)
+        self.specstructure = html_label_key(specstructure)
+        self.lines: list[str] = []
+        self.current: list[str] = []
+        self.capturing_depth = 0
+        self.skip_depth = 0
+
+    def handle_starttag(self, tag: str, attrs_list: list[tuple[str, str | None]]) -> None:
+        tag = tag.lower()
+        attrs = attr_map(attrs_list)
+        if not self.capturing_depth:
+            if tag == "div" and html_label_key(attrs.get("specstructure", "")) == self.specstructure:
+                self.capturing_depth = 1
+            return
+
+        self.capturing_depth += 1
+        if self.skip_depth:
+            self.skip_depth += 1
+            return
+        if tag in SKIP_TAGS or has_display_none(attrs) or "as_note_type" in class_tokens(attrs):
+            self.skip_depth = 1
+            return
+        if tag in BLOCK_TAGS:
+            self.flush()
+
+    def handle_endtag(self, tag: str) -> None:
+        tag = tag.lower()
+        if not self.capturing_depth:
+            return
+        if self.skip_depth:
+            self.skip_depth -= 1
+        elif tag in BLOCK_TAGS:
+            self.flush()
+        self.capturing_depth -= 1
+        if not self.capturing_depth:
+            self.flush()
+
+    def handle_startendtag(self, tag: str, attrs_list: list[tuple[str, str | None]]) -> None:
+        if self.capturing_depth and not self.skip_depth and tag.lower() in BLOCK_TAGS:
+            self.flush()
+
+    def handle_data(self, data: str) -> None:
+        if not self.capturing_depth or self.skip_depth:
+            return
+        for part in re.split(r"(\n+)", data):
+            if not part:
+                continue
+            if "\n" in part:
+                self.flush()
+                continue
+            cleaned = re.sub(r"\s+", " ", part).strip()
+            if cleaned:
+                self.current.append(cleaned)
+
+    def flush(self) -> None:
+        if not self.current:
+            return
+        text = html.unescape(" ".join(self.current))
+        text = re.sub(r"\s+", " ", text).strip()
+        if text:
+            self.lines.append(text)
+        self.current = []
+
+
+def extract_specstructure_lines(html_text: str, specstructure: str) -> list[str]:
+    parser = SpecStructureTextParser(specstructure)
+    parser.feed(html_text)
+    parser.flush()
+    return parser.lines
+
+
+def keep_scoped_operating_system_section(lines: list[str], scoped_lines: list[str]) -> list[str]:
+    """Remove OS headings unless they introduce the dedicated OS div's values."""
+    scoped_start: int | None = None
+    if scoped_lines:
+        for index in range(len(lines) - len(scoped_lines) + 1):
+            if lines[index : index + len(scoped_lines)] == scoped_lines:
+                scoped_start = index
+                break
+
+    scoped_indexes = (
+        set(range(scoped_start, scoped_start + len(scoped_lines)))
+        if scoped_start is not None
+        else set()
+    )
+    return [
+        line
+        for index, line in enumerate(lines)
+        if html_label_key(line) != "operating system" or index in scoped_indexes
+    ]
+
+
 def normalize_product_filename(title: str) -> str:
     value = html.unescape(title)
     value = re.sub(r"\([^)]*\)", lambda match: " " + match.group(0).strip("()") + " ", value)
@@ -280,6 +376,54 @@ def html_label_key(value: str) -> str:
 HTML_DISPLAY_TABLE_ROW_PREFIX = "__HTML_DISPLAY_TABLE_ROW__"
 HTML_SOURCE_MARKER = "__HTML_SOURCE_SPEC__"
 
+HTML_TOP_LEVEL_SECTION_MAP = {
+    "performance": "PERFORMANCE",
+    "design": "DESIGN",
+    "connectivity": "CONNECTIVITY",
+    "security & privacy": "SECURITY & PRIVACY",
+    "manageability": "MANAGEABILITY",
+    "environmental": "ENVIRONMENTAL",
+    "certifications": "CERTIFICATIONS",
+    "special features": "SPECIAL FEATURES",
+}
+
+HTML_TOP_LEVEL_SECTION_VALUES = set(HTML_TOP_LEVEL_SECTION_MAP.values())
+
+HTML_TABLE_HEADER_LABELS = {
+    "ai tops (peak)",
+    "base frequency",
+    "boost clock",
+    "cache",
+    "color",
+    "color gamut",
+    "connector",
+    "contrast ratio",
+    "cores",
+    "efficiency",
+    "intel vpro eligibility",
+    "key features",
+    "max frequency",
+    "max resolution",
+    "memory",
+    "memory support",
+    "npu",
+    "overall tops",
+    "power",
+    "processor graphics",
+    "processor name",
+    "refresh rate",
+    "resolution",
+    "size",
+    "surface",
+    "tgp",
+    "threads",
+    "touch",
+    "type",
+    "viewing angle (l/r/u/d)",
+}
+
+HTML_POWER_SUPPLY_HEADERS = ["power", "type", "efficiency", "key features"]
+
 
 def clean_html_table_cell(value: str) -> str:
     value = html.unescape(value)
@@ -288,6 +432,123 @@ def clean_html_table_cell(value: str) -> str:
     value = re.sub(r"\[[0-9,\s]+\]", "", value)
     value = re.sub(r"\s+", " ", value).strip()
     return value
+
+
+def normalize_html_heading_line(value: str) -> str:
+    key = html_label_key(value)
+    return HTML_TOP_LEVEL_SECTION_MAP.get(key, value)
+
+
+def strip_optional_marker(value: str) -> str:
+    return re.sub(r"\s*\*+\s*$", "", value).strip()
+
+
+def is_html_power_supply_label(value: str) -> bool:
+    return html_label_key(strip_optional_marker(value)) == "power supply"
+
+
+def is_known_html_table_header(value: str) -> bool:
+    return html_label_key(value) in HTML_TABLE_HEADER_LABELS
+
+
+def consecutive_table_headers(lines: list[str], index: int) -> list[str]:
+    headers: list[str] = []
+    cursor = index
+    while cursor < len(lines) and is_known_html_table_header(lines[cursor]):
+        headers.append(lines[cursor])
+        cursor += 1
+    return headers if len(headers) >= 2 else []
+
+
+def previous_meaningful_line(lines: list[str], index: int) -> str:
+    cursor = index - 1
+    while cursor >= 0:
+        candidate = lines[cursor].strip()
+        if candidate:
+            return candidate
+        cursor -= 1
+    return ""
+
+
+def mark_optional_same_name_values(lines: list[str]) -> list[str]:
+    output = list(lines)
+    for index in range(1, len(output)):
+        current_key = html_label_key(output[index])
+        previous_key = html_label_key(output[index - 1])
+        if current_key != "chassis intrusion switch" or previous_key != current_key:
+            continue
+        next_key = html_label_key(output[index + 1]) if index + 1 < len(output) else ""
+        if next_key == f"no {current_key}":
+            output[index] = "(Optional) Chassis intrusion switch"
+    return output
+
+
+def render_power_supply_table_rows(data: list[str], column_count: int) -> list[str]:
+    rendered: list[str] = []
+    for start in range(0, len(data), column_count):
+        row = data[start : start + column_count]
+        if len(row) < column_count:
+            break
+        power, supply_type, efficiency = row[0], row[1], row[2]
+        key_features = row[3] if column_count > 3 else ""
+        pieces = [power, supply_type, efficiency]
+        if key_features and not re.fullmatch(r"[-/]+", key_features.strip()):
+            pieces.append(key_features)
+        line = re.sub(r"\s+", " ", " ".join(piece for piece in pieces if piece)).strip()
+        if line:
+            rendered.append(line)
+    return rendered
+
+
+def canonicalize_html_table_sequences(lines: list[str]) -> list[str]:
+    output: list[str] = []
+    index = 0
+    while index < len(lines):
+        headers = consecutive_table_headers(lines, index)
+        if not headers:
+            output.append(lines[index])
+            index += 1
+            continue
+
+        header_keys = [html_label_key(header) for header in headers]
+        previous = previous_meaningful_line(output, len(output))
+        is_power_supply_table = (
+            header_keys[: len(HTML_POWER_SUPPLY_HEADERS)] == HTML_POWER_SUPPLY_HEADERS
+            and is_html_power_supply_label(previous)
+        )
+
+        index += len(headers)
+        if not is_power_supply_table:
+            # Header cells are table scaffolding, not feature values. Leaving
+            # them in the stream lets old PDF text rules mistake columns such
+            # as "NPU" or "Power" for real feature labels.
+            continue
+
+        data: list[str] = []
+        while index < len(lines):
+            next_headers = consecutive_table_headers(lines, index)
+            if next_headers:
+                break
+            key = html_label_key(lines[index])
+            if key in HTML_TOP_LEVEL_SECTION_MAP:
+                break
+            if key in {
+                "design",
+                "input device",
+                "mechanical",
+                "form factor",
+                "notes",
+                "notes:",
+            }:
+                break
+            data.append(lines[index])
+            index += 1
+
+        rendered = render_power_supply_table_rows(data, len(headers))
+        output.extend(rendered)
+        continue
+
+    return output
 
 
 class HtmlDisplayTableParser(HTMLParser):
@@ -467,6 +728,7 @@ def keep_html_storage_fields(lines: list[str]) -> list[str]:
 def normalize_html_spec_lines(lines: list[str]) -> list[str]:
     normalized: list[str] = []
     in_max_storage = False
+    seen_spec_section = False
     storage_stop_labels = {
         "Storage Slot",
         "Storage Slots",
@@ -481,6 +743,13 @@ def normalize_html_spec_lines(lines: list[str]) -> list[str]:
         clean = re.sub(r"\s+", " ", line).strip()
         if not clean:
             continue
+        clean = normalize_html_heading_line(clean)
+
+        if not seen_spec_section:
+            if clean in HTML_TOP_LEVEL_SECTION_VALUES:
+                seen_spec_section = True
+            else:
+                continue
 
         if clean == "Max Storage Support":
             in_max_storage = True
@@ -497,6 +766,8 @@ def normalize_html_spec_lines(lines: list[str]) -> list[str]:
                 clean = f"Up to {count} drives, {count}x {match.group('kind')}"
 
         normalized.append(clean)
+    normalized = canonicalize_html_table_sequences(normalized)
+    normalized = mark_optional_same_name_values(normalized)
     return keep_html_storage_fields(normalized)
 
 
@@ -506,6 +777,11 @@ def html_to_text(html_path: Path) -> tuple[str, str]:
     parser.feed(source)
     parser.flush()
     lines = normalize_html_spec_lines(parser.lines)
+    # Keep Operating System sourcing explicit while preserving its original place
+    # in the Performance section. The product-line generators retain their
+    # existing normalization and rendering rules.
+    operating_system_lines = extract_specstructure_lines(source, "Operating System")
+    lines = keep_scoped_operating_system_section(lines, operating_system_lines)
     lines.extend(extract_html_display_table_lines(source))
     lines.append(HTML_SOURCE_MARKER)
     text = "\n".join(lines)

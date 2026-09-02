@@ -17,6 +17,9 @@ from batch_generate_shortspec_excel import (
     sanitize_sheet_name,
     write_xlsx,
 )
+from keyboard_shortspec_common import summarize_desktop_keyboard_from_lines
+from operating_system_shortspec_common import normalize_operating_system_values
+from special_features_shortspec_common import extract_special_features_from_lines
 
 
 TOP_LEVEL_SECTIONS = [
@@ -28,6 +31,7 @@ TOP_LEVEL_SECTIONS = [
     "SERVICE",
     "ENVIRONMENTAL",
     "CERTIFICATIONS",
+    "SPECIAL FEATURES",
 ]
 
 DT_L2_LABELS = {
@@ -44,6 +48,7 @@ DT_L2_LABELS = {
     "Camera",
     "Power Supply",
     "Display",
+    "Keyboard",
     "Form Factor",
     "Dimensions (WxDxH)",
     "Weight",
@@ -69,6 +74,7 @@ DT_L2_LABELS = {
     "Material",
     "Green Certifications",
     "Other Certifications",
+    "Special Features",
 }
 
 SECTION_HEADINGS = {
@@ -82,6 +88,7 @@ SECTION_HEADINGS = {
     "SERVICE",
     "ENVIRONMENTAL",
     "CERTIFICATIONS",
+    "SPECIAL FEATURES",
     "ACCESSORIES",
     "OPERATING REQUIREMENTS",
 }
@@ -95,6 +102,7 @@ FIELD_LABELS = {
     "AI (Artificial Intelligence)",
     "Operating System",
     "Operating System**",
+    "Special Features",
     "Graphics",
     "Graphics**",
     "Monitor Support",
@@ -128,6 +136,8 @@ FIELD_LABELS = {
     "Input Device",
     "Keyboard",
     "Keyboard**",
+    "Keyboard Backlight",
+    "Keyboard Backlight**",
     "Mouse",
     "Mouse**",
     "Mechanical",
@@ -481,22 +491,11 @@ def summarize_npu(lines: list[str]) -> list[str]:
 
 def summarize_operating_system(lines: list[str]) -> list[str]:
     values = slice_after_label(lines, ["Operating System**", "Operating System"], ["Graphics", "Monitor Support"])
-    result = []
-    for value in filter_values(values):
-        if value.lower().startswith("no preload"):
-            continue
-        value = value.replace("Windows 10 Home 64 Single Language", "Windows 10 Home 64")
-        result.append(value)
-    result = unique_preserve(result)
-    lowered = {value.lower() for value in result}
-    if "windows 11 pro" in lowered and "windows 11 home" in lowered:
-        merged = ["Windows 11 Pro or Home"]
-        for value in result:
-            if value.lower() in {"windows 11 pro", "windows 11 home", "windows 11 home single language"}:
-                continue
-            merged.append(value)
-        result = unique_preserve(merged)
-    return result
+    return normalize_operating_system_values(filter_values(values))
+
+
+def summarize_special_features(lines: list[str]) -> list[str]:
+    return extract_special_features_from_lines(lines, label_key, is_section_heading)
 
 
 def summarize_graphics(lines: list[str], profile: str) -> list[str]:
@@ -1011,7 +1010,11 @@ def build_dt_rows(product_name: str, spec_text: str, profile: str) -> list[list[
     append_field(rows, "PERFORMANCE", "Camera", summarize_camera(lines))
     append_field(rows, "PERFORMANCE", "Power Supply", summarize_power_supply(lines, profile))
 
+    append_field(rows, "SPECIAL FEATURES", "Special Features", summarize_special_features(lines))
+
     append_field(rows, "DESIGN", "Display", summarize_display(lines))
+    for value in summarize_desktop_keyboard_from_lines(lines):
+        rows.append(["DESIGN", "Keyboard", value])
     append_field(rows, "DESIGN", "Form Factor", summarize_simple_field(lines, ["Form Factor"], ["Dimensions (WxDxH)"], 3))
     append_field(rows, "DESIGN", "Dimensions (WxDxH)", summarize_dimensions(lines))
     append_field(rows, "DESIGN", "Weight", summarize_weight(lines))

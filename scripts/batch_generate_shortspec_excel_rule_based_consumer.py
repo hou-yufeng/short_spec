@@ -14,6 +14,9 @@ from batch_generate_shortspec_excel import (
     save_generation_texts,
     write_xlsx,
 )
+from operating_system_shortspec_common import normalize_operating_system_values
+from keyboard_shortspec_common import summarize_mobile_keyboard
+from special_features_shortspec_common import normalize_special_feature_values
 
 
 TOP_LEVEL_SECTIONS = [
@@ -24,6 +27,7 @@ TOP_LEVEL_SECTIONS = [
     "MANAGEABILITY",
     "ENVIRONMENTAL",
     "CERTIFICATIONS",
+    "SPECIAL FEATURES",
 ]
 
 GENERIC_NOISE_LINES = {
@@ -323,47 +327,6 @@ def sanitize_generation_text(text: str) -> str:
     text = text.replace(" \n", "\n")
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.strip() + "\n"
-
-
-def compact_windows_lines(lines: list[str]) -> list[str]:
-    if not lines:
-        return []
-
-    if any(token in line.lower() for line in lines for token in [" 64", "dg windows", "single language"]):
-        keep = [
-            line
-            for line in lines
-            if "single language" not in line.lower()
-            and not (line.lower() == "linux" and any("ubuntu" in item.lower() or "fedora" in item.lower() for item in lines))
-        ]
-        return unique_preserve(keep)
-
-    keep: list[str] = []
-    has_win11_pro = any("windows 11 pro" == line.lower() for line in lines)
-    has_win11_home = any("windows 11 home" == line.lower() for line in lines)
-    if has_win11_pro and has_win11_home:
-        keep.append("Windows 11 Pro or Home")
-    else:
-        keep.extend([line for line in lines if line.lower() in {"windows 11 pro", "windows 11 home"}])
-
-    linux_lines = [line for line in lines if "ubuntu" in line.lower() or "fedora" in line.lower()]
-    if linux_lines:
-        if len(linux_lines) >= 2:
-            keep.append("Fedora or Ubuntu Linux")
-        else:
-            keep.extend(linux_lines)
-
-    others = [
-        line
-        for line in lines
-        if line not in keep
-        and not {"windows 11 pro", "windows 11 home"}.__contains__(line.lower())
-        and "ubuntu" not in line.lower()
-        and "fedora" not in line.lower()
-        and "no preload" not in line.lower()
-    ]
-    keep.extend(others)
-    return unique_preserve(keep)
 
 
 PROCESSOR_GENERIC_FAMILY_PATTERNS = {
@@ -675,9 +638,12 @@ def extract_npu(perf: list[str]) -> list[str]:
 
 
 def extract_operating_system(perf: list[str]) -> list[str]:
-    lines = slice_after_exact_label(perf, ["Operating System", "Operating System**"], ["Graphics", "Chipset", "Memory"])
+    lines = slice_after_exact_label(
+        perf,
+        ["Operating System", "Operating System**"],
+        ["Graphics", "Monitor Support", "Chipset", "Memory"],
+    )
     cleaned = []
-    has_linux_distro = any("ubuntu" in line.lower() or "fedora" in line.lower() for line in lines)
     for line in lines:
         lowered = line.lower()
         if normalize_label_token(line) in {"operating system"} or is_noise_line(line):
@@ -686,15 +652,8 @@ def extract_operating_system(perf: list[str]) -> list[str]:
             continue
         if "no preload" in lowered or "no operating system" in lowered:
             continue
-        if "chromeos" in lowered:
-            cleaned.append("ChromeOS")
-            continue
-        if lowered == "linux" and has_linux_distro:
-            continue
-        if lowered.startswith("windows") or "ubuntu" in lowered or "fedora" in lowered or lowered == "linux":
-            cleaned.append(line)
-    cleaned = [line for line in unique_preserve(cleaned) if "operating system" not in line.lower()]
-    return [line for line in compact_windows_lines(cleaned) if "operating system" not in line.lower()]
+        cleaned.append(line)
+    return normalize_operating_system_values(cleaned)
 
 
 def extract_graphics(perf: list[str]) -> list[str]:
@@ -1335,95 +1294,9 @@ def summarize_pen(design: list[str]) -> list[str]:
 
 
 def summarize_keyboard(design: list[str]) -> list[str]:
-    keyboard = slice_after_exact_label(design, ["Keyboard"], ["Keyboard Backlight", "UltraNav", "Mechanical", "Touchpad"])
-    backlight = slice_after_exact_label(design, ["Keyboard Backlight"], ["UltraNav", "Mechanical", "Touchpad"])
-    if not keyboard:
-        return []
-    base = keyboard[0]
-    lowered_keyboard = " ".join(keyboard).lower()
-    if "dock" in lowered_keyboard and "keyboard" in lowered_keyboard:
-        if "pogo pin" in lowered_keyboard:
-            return ["Keyboard Dock (Pogo pin connected)*"]
-        return ["Keyboard Dock*"]
-    if "folio" in lowered_keyboard and "keyboard" in lowered_keyboard:
-        if "chromebook" in lowered_keyboard and "touchpad" in lowered_keyboard and "pogo pin" in lowered_keyboard:
-            return ["Chromebook folio keyboard with touchpad (Pogo pin, detachable)*"]
-        if "pogo pin" in lowered_keyboard:
-            return ["Folio case keyboard (Pogo pin, detachable)*"]
-        return ["Folio case keyboard*"]
-    base_lower = base.lower()
-    chrome = "chrome keyboard" in base_lower
-    six_row = "6-row" in base_lower
-    numeric = "numeric keypad" in base_lower
-    copilot = "copilot key" in base_lower
-    multimedia = "multimedia fn keys" in base_lower
-    spill_resistant = "spill-resistant" in lowered_keyboard
-    gaming_like = "air intake design" in base_lower
-
-    backlight_text = " ".join(backlight).lower()
-    backlight_style = ""
-    if "24-zone rgb backlight" in backlight_text and "white backlight" in backlight_text:
-        backlight_style = "24-Zone RGB / white backlight"
-    elif "4-zone rgb backlight" in backlight_text and "white backlight" in backlight_text and "blue backlight" in backlight_text:
-        backlight_style = "4-Zone RGB / white / blue backlight"
-    elif "4-zone rgb backlight" in backlight_text and "white backlight" in backlight_text:
-        backlight_style = "4-Zone RGB / white backlight"
-    elif "1-zone rgb backlight" in backlight_text and "24-zone rgb backlight" in backlight_text:
-        backlight_style = "1-Zone RGB / 24-Zone RGB backlight"
-    elif "per-key rgb backlight" in backlight_text and "white backlight" in backlight_text:
-        backlight_style = "Per-key RGB / white backlight"
-    elif "per-key rgb backlight" in backlight_text:
-        backlight_style = "Per-key RGB backlight"
-    elif "rgb backlight" in backlight_text and "white backlight" in backlight_text:
-        backlight_style = "RGB / white backlight"
-    elif "rgb backlight" in backlight_text:
-        backlight_style = "RGB backlight"
-    elif "white backlight" in backlight_text:
-        backlight_style = "white backlight"
-    elif "led backlight" in backlight_text and "non-backlight" in backlight_text:
-        backlight_style = "optional backlight"
-    elif "led backlight" in backlight_text:
-        backlight_style = "backlight"
-
-    gaming_like = gaming_like or "rgb" in backlight_style.lower() or "per-key" in backlight_style.lower()
-
-    if chrome:
-        base_label = "Chrome keyboard, 6-row" if six_row else "Chrome keyboard"
-        extras: list[str] = []
-        if spill_resistant:
-            extras.append("spill-resistant")
-        if numeric:
-            extras.append("numeric keypad")
-        if backlight_style and "rgb" not in backlight_style.lower() and not spill_resistant:
-            extras.append(backlight_style)
-        if extras:
-            return [f"{base_label}, {', '.join(extras)}"]
-        return [base_label]
-
-    base_parts: list[str] = []
-    if six_row:
-        base_parts.append("6-row")
-    if spill_resistant:
-        base_parts.append("spill-resistant")
-    if gaming_like and multimedia:
-        base_parts.append("multimedia Fn keys")
-    if numeric:
-        base_parts.append("numeric keypad")
-    if copilot:
-        base_parts.append("Copilot key")
-
-    if not base_parts:
-        base_label = base
-    elif base_parts == ["6-row"] and not backlight_style:
-        base_label = "6-row keyboard"
-    else:
-        base_label = ", ".join(base_parts)
-
-    if backlight_style:
-        if gaming_like:
-            return [base_label, backlight_style]
-        return [f"{base_label}, {backlight_style}"]
-    return [base_label]
+    keyboard = slice_after_exact_label(design, ["Keyboard"], ["Keyboard Backlight", "UltraNav", "Mechanical", "Touchpad", "Mouse"])
+    backlight = slice_after_exact_label(design, ["Keyboard Backlight"], ["UltraNav", "Mechanical", "Touchpad", "Mouse"])
+    return summarize_mobile_keyboard(keyboard, backlight)
 
 
 def summarize_touchpad(design: list[str]) -> list[str]:
@@ -1917,6 +1790,7 @@ def build_shortdesc(product_name: str, spec_text: str, output_mode: str, heading
     mgmt = sections.get("MANAGEABILITY", [])
     env = sections.get("ENVIRONMENTAL", [])
     cert = sections.get("CERTIFICATIONS", [])
+    special = sections.get("SPECIAL FEATURES", [])
 
     body: list[str] = []
 
@@ -1937,6 +1811,11 @@ def build_shortdesc(product_name: str, spec_text: str, output_mode: str, heading
     if performance_lines:
         body.append(format_section_heading("PERFORMANCE", heading_style))
         body.extend(performance_lines)
+
+    special_values = normalize_special_feature_values(special)
+    if special_values:
+        body.append(format_section_heading("SPECIAL FEATURES", heading_style))
+        append_field(body, heading_style, "Special Features", special_values)
 
     design_lines: list[str] = []
     append_field(design_lines, heading_style, "Display", render_display_offerings(design))

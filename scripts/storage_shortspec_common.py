@@ -876,7 +876,10 @@ def render_storage_branch(lines: list[str]) -> RenderedStorage:
     if not lines:
         return RenderedStorage("", (), "Max Storage Support not found")
 
-    if looks_like_systemboard_storage(lines):
+    one_drive_or_body = render_one_drive_or_storage_options(lines)
+    if one_drive_or_body:
+        body = one_drive_or_body
+    elif looks_like_systemboard_storage(lines):
         body = render_systemboard_storage(lines)
     elif starts_drive_summary(lines[0]):
         body = render_drive_summary(lines[0], lines[1:])
@@ -888,6 +891,52 @@ def render_storage_branch(lines: list[str]) -> RenderedStorage:
     if not body:
         return RenderedStorage("", (), "Ambiguous storage rules")
     return RenderedStorage(finalize_storage_body(body))
+
+
+def render_one_drive_or_storage_options(lines: list[str]) -> str:
+    if len(lines) != 1:
+        return ""
+
+    line = normalize_storage_phrase(lines[0])
+    match = re.match(r"^One drive,\s*(?P<options>.+)$", line, flags=re.I)
+    if not match or not re.search(r"\s+or\s+", match.group("options"), flags=re.I):
+        return ""
+
+    options = [normalize_storage_phrase(part) for part in re.split(r"\s+or\s+", match.group("options"), flags=re.I)]
+    if len(options) < 2 or any(not option for option in options):
+        return ""
+
+    candidates: list[tuple[float, str]] = []
+    for option in options:
+        parsed = parse_one_drive_or_storage_option(option)
+        if parsed is None:
+            return ""
+        candidates.append(parsed)
+
+    capacity_gb, device = max(candidates, key=lambda item: item[0])
+    return finalize_storage_body(f"Up to 1x {device}, {format_capacity_gb(capacity_gb)} total")
+
+
+def parse_one_drive_or_storage_option(option: str) -> tuple[float, str] | None:
+    match = re.match(
+        r"^(?:up to\s+)?(?P<capacity>\d+(?:\.\d+)?)\s*(?P<unit>TB|GB)\s+(?P<device>.+)$",
+        normalize_storage_phrase(option),
+        flags=re.I,
+    )
+    if not match:
+        return None
+
+    device = normalize_storage_phrase(match.group("device"))
+    if not is_one_drive_or_storage_device(device):
+        return None
+    return capacity_to_gb(match.group("capacity"), match.group("unit")), device
+
+
+def is_one_drive_or_storage_device(device: str) -> bool:
+    return bool(
+        re.search(r"\bM\.2(?:\s+\d{4})?\s+SSD\b", device, flags=re.I)
+        or re.search(r"\bM\.2\s+UFS(?:\s+[0-9.]+)?\s+memory card\b", device, flags=re.I)
+    )
 
 
 def starts_drive_summary(line: str) -> bool:

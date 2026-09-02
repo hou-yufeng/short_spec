@@ -17,6 +17,9 @@ from batch_generate_shortspec_excel import (
     save_generation_texts,
     write_xlsx,
 )
+from keyboard_shortspec_common import summarize_mobile_keyboard
+from operating_system_shortspec_common import normalize_operating_system_values
+from special_features_shortspec_common import normalize_special_feature_values
 
 
 TOP_LEVEL_SECTIONS = [
@@ -26,6 +29,7 @@ TOP_LEVEL_SECTIONS = [
     "SECURITY & PRIVACY",
     "ACCESSORIES",
     "CERTIFICATIONS",
+    "SPECIAL FEATURES",
 ]
 
 SPEC_TOP_LEVEL_SECTIONS = {
@@ -39,6 +43,7 @@ SPEC_TOP_LEVEL_SECTIONS = {
     "OPERATING REQUIREMENTS",
     "CERTIFICATIONS",
     "SOFTWARE",
+    "SPECIAL FEATURES",
 }
 
 NOISE_PREFIXES = (
@@ -363,7 +368,7 @@ def summarize_processor(perf: list[str]) -> list[str]:
 def summarize_operating_system(perf: list[str]) -> list[str]:
     values = slice_after_label(perf, ["Operating System", "Operating System[1]"], ["Graphics", "Notes"])
     values = [value for value in filtered_values(values) if label_token(value) != "operating system"]
-    return values[:1]
+    return normalize_operating_system_values(values)
 
 
 def summarize_graphics(perf: list[str]) -> list[str]:
@@ -847,6 +852,7 @@ def build_table_rows(product_name: str, spec_text: str) -> list[list[str]]:
     security = sections.get("SECURITY & PRIVACY", [])
     accessories = sections.get("ACCESSORIES", [])
     cert = sections.get("CERTIFICATIONS", [])
+    special = sections.get("SPECIAL FEATURES", [])
 
     rows: list[list[str]] = [["L1 Feature", "L2 Feature", "Short Spec"]]
 
@@ -862,9 +868,17 @@ def build_table_rows(product_name: str, spec_text: str) -> list[list[str]]:
     add_field(rows, "PERFORMANCE", "Charging Time", summarize_charging_time(perf))
     add_field(rows, "PERFORMANCE", "Power Adapter", summarize_power_adapter(perf))
 
+    for value in normalize_special_feature_values(special):
+        rows.append(["SPECIAL FEATURES", "Special Features", value])
+
     add_field(rows, "DESIGN", "Display", summarize_display(design))
     add_field(rows, "DESIGN", "Screen-to-Body Ratio", summarize_screen_to_body(design))
     add_field(rows, "DESIGN", "Pen", summarize_pen(design))
+    for value in summarize_mobile_keyboard(
+        slice_after_label(design, ["Keyboard"], ["Keyboard Backlight", "UltraNav", "Mechanical", "Touchpad", "Mouse"]),
+        slice_after_label(design, ["Keyboard Backlight"], ["UltraNav", "Mechanical", "Touchpad", "Mouse"]),
+    ):
+        rows.append(["DESIGN", "Keyboard", value])
     add_field(rows, "DESIGN", "Dimensions (WxDxH)", summarize_dimensions(design))
     add_field(rows, "DESIGN", "Weight", summarize_weight(design))
     add_field(rows, "DESIGN", "Color", summarize_color(design))

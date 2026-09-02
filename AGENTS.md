@@ -8,7 +8,7 @@ This file defines project-specific working rules for agents contributing to this
 - PDF-based tools are historical deliverables and references. Do not treat PDF as the preferred route for new feature development unless explicitly requested.
 - The current core short-spec feature set is Storage, WLAN, and Display.
 - Storage, WLAN, and Display HTML rules are considered established unless the user explicitly requests a rule change.
-- Other short-spec features are under active development and should reuse the existing extraction, rule-based conversion, Excel output, launcher, and release packaging patterns where practical.
+- Full HTML-source ShortSpec generation uses the latest HTML Storage/WLAN/Display rules for those three features and the latest PDF full rule-based rules for all other features.
 
 ## Completed Deliverables
 
@@ -17,6 +17,7 @@ The project has the following milestone deliverables:
 - Full short-spec generation tools using PDF source input.
 - Storage, WLAN, and Display short-spec generation tools using PDF source input.
 - Storage, WLAN, and Display short-spec generation tools using HTML source input.
+- Full short-spec generation tools using HTML source input, with Storage/WLAN/Display overridden by the HTML SDW rules.
 
 Do not modify completed deliverables, historical release folders, or existing rules unless the user explicitly asks for that scope.
 
@@ -41,6 +42,7 @@ Do not modify completed deliverables, historical release folders, or existing ru
 - WLAN HTML rules are established, including highest Wi-Fi selection, Bluetooth version selection, optional WLAN handling, Intel tie-breaking, and Bluetooth hardware-ready output.
 - Display HTML rules are established and should follow HTML table fields strictly.
 - ThinkStation Storage uses Max Storage Support directly and must not be converted through the non-ThinkStation Storage summarization rules.
+- For full HTML-source generation, Storage, Display, and WLAN rows must be replaced from the HTML SDW generators; all other rows must remain from the PDF full rule-based generators.
 
 ## Release Packaging
 

@@ -30,6 +30,7 @@ TOP_LEVEL_FEATURES = {
     "ENVIRONMENTAL",
     "ACCESSORIES",
     "CERTIFICATIONS",
+    "SPECIAL FEATURES",
 }
 
 PDF_PAGE_BREAK = "__SHORTSPEC_PAGE_BREAK__"
@@ -52,6 +53,7 @@ L2_FEATURES = {
     "Charging Time",
     "Power Adapter",
     "Power Adapter*",
+    "Special Features",
     "Display",
     "Screen-to-Body Ratio",
     "Multi-mode",
@@ -552,10 +554,14 @@ def aggregate_feature_rows(feature_rows: list[tuple[str, str, str]]) -> list[tup
             continue
         grouped[index_by_key[key]][2].append(short_spec)
 
-    return [
-        (l1_feature, l2_feature, render_short_spec_cell(short_specs))
-        for l1_feature, l2_feature, short_specs in grouped
-    ]
+    aggregated: list[tuple[str, str, str]] = []
+    for l1_feature, l2_feature, short_specs in grouped:
+        if l2_feature == "Keyboard":
+            value = "\n".join(value.strip() for value in short_specs if value and value.strip())
+        else:
+            value = render_short_spec_cell(short_specs)
+        aggregated.append((l1_feature, l2_feature, value))
+    return aggregated
 
 
 def shortdesc_text_to_table_rows(text: str) -> list[list[str]]:
