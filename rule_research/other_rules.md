@@ -56,7 +56,7 @@
 
 + 第一项输出是电池容量+"battery"+逗号+空格+快速充电
   + 电池容量的值是HTML Spec的Battery下的每个选项, 去掉条件分支的信息 (以"XXX: " 为标记, XXX为任意文本)以后, 以数字+Wh或数字+mAh组成的文本
-  + 快速充电的值是HTML Spec的Battery下的每个选项中, 以"supports"开始, 到空格+左括号之前的文本, 包含"supports".
+  + 快速充电的值是HTML Spec的Battery下的每个选项中, 以"supports"开始, 到空格+左括号之前的文本, 不包含"supports".
   + 如果没有"supports", 则仅输出电池容量+"battery"
   + 如果Battery下有多个选项, 则每个选项都按照以上规则输出, 删除条件分支的信息 (以"XXX: " 为标记, XXX为任意文本)
   

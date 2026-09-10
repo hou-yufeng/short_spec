@@ -1,0 +1,2 @@
+仅Tablets产品线需要Buttons简短规格.
+Buttons的简短规格直接从HTMLSpec的Buttons取值, 每个条目占据一行.
