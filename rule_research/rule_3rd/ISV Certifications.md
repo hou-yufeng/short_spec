@@ -1,0 +1,2 @@
+ISV Certifications简短规格只用于ThinkStation产品线.
+ISV Certifications的简短规格信息是固定的, 设置为"<p>Please visit <a href="www.thinkworkstations.com/isv-certifications/" target="_blank">ISV certifications for Lenovo Workstations</a></p>"

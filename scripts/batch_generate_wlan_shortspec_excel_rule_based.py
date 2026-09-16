@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from wlan_shortspec_common import WLANToolConfig, run
+from html_product_rules.commercial_laptop.wlan import WLANToolConfig, run
 
 
 CONFIG = WLANToolConfig(

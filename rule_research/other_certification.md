@@ -6,4 +6,4 @@
     5.1 选项包含以"xxxmodels:" 或者"xxxmodel:"或者(Optional)开头时, 不要输出"xxxmodels:" 或者"xxxmodel:"或者(Optional)
     5.2 选项包含"xxxmodels:" 或者"xxxmodel:"或者(Optional)时, 该选项最后加*
 6. 确保每个选项不以空格开头或结尾.
-7. 确保以No开头的选项不要输出
+7. 确保以No开头的选项不要输出.

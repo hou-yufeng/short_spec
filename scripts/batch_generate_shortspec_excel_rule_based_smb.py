@@ -5,6 +5,16 @@ import re
 from pathlib import Path
 
 import batch_generate_shortspec_excel_rule_based_consumer as base
+from html_product_rules.smb_laptop.keyboard import summarize_mobile_keyboard
+from html_product_rules.smb_laptop.operating_system import normalize_operating_system_values
+from html_product_rules.smb_laptop.special_features import normalize_special_feature_values
+
+# SMB owns independent copies of these feature rules.  The legacy SMB module
+# delegates its full-generator control flow to the consumer implementation, so
+# bind the SMB-owned rule functions before any generation entry point is used.
+base.summarize_mobile_keyboard = summarize_mobile_keyboard
+base.normalize_operating_system_values = normalize_operating_system_values
+base.normalize_special_feature_values = normalize_special_feature_values
 
 
 _ORIG_NORMALIZE_PROCESSOR_FAMILY_PHRASE = base.normalize_processor_family_phrase

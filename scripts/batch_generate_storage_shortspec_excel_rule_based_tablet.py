@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from storage_shortspec_common import StorageToolConfig, run
+from html_product_rules.tablet.storage import StorageToolConfig, run
 
 
 CONFIG = StorageToolConfig(

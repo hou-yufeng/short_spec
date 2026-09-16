@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import os
 import sys
@@ -8,13 +9,11 @@ import time
 from pathlib import Path
 
 from batch_generate_shortspec_excel import derive_display_name, write_xlsx
-from html_memory_common import MEMORY_FEATURE, generate_memory_short_spec
+MEMORY_FEATURE = "Memory"
 from html_all_runner import (
     FULL_CONFIGS,
     HTML_KEYBOARD_FEATURE,
     HTML_OTHER_CERTIFICATIONS_FEATURE,
-    collect_html_keyboard_rows,
-    collect_html_other_certification_rows,
     overlay_html_keyboard_rows,
     overlay_html_other_certification_rows,
     prepare_text_dirs,
@@ -35,6 +34,18 @@ TARGET_L2_FEATURES = {
     HTML_OTHER_CERTIFICATIONS_FEATURE,
 }
 KEYBOARDLESS_CONFIGS = {"dt", "ts"}
+PRODUCT_RULE_PACKAGES = {
+    "com": "commercial_laptop",
+    "con": "consumer_laptop",
+    "smb": "smb_laptop",
+    "tab": "tablet",
+    "dt": "desktop",
+    "ts": "thinkstation",
+}
+
+
+def product_rule_module(config_key: str, feature: str):
+    return importlib.import_module(f"html_product_rules.{PRODUCT_RULE_PACKAGES[config_key]}.{feature}")
 
 
 def target_l2_features(config_key: str) -> set[str]:
@@ -66,13 +77,14 @@ def select_target_rows(rows: list[list[str]], config_key: str) -> list[list[str]
     return [rows[0], *[row for row in rows[1:] if row_value(row, 2) in features]]
 
 
-def collect_html_memory_rows(converted: list[dict[str, str]]) -> dict[str, list[str]]:
+def collect_html_memory_rows(converted: list[dict[str, str]], config_key: str) -> dict[str, list[str]]:
+    memory_rules = product_rule_module(config_key, "memory")
     rows: dict[str, list[str]] = {}
     for item in converted:
         html_path = Path(item["source_html"])
         text_spec = Path(item["sdw_text_spec"])
         product = derive_display_name(text_spec)
-        result = generate_memory_short_spec(
+        result = memory_rules.generate_memory_short_spec(
             html_path.read_text(encoding="utf-8-sig", errors="replace"),
             product,
         )
@@ -221,19 +233,21 @@ def main() -> None:
         full_rows = read_summary_rows(full_workbook)
         merged_rows = overlay_html_memory_rows(
             full_rows,
-            collect_html_memory_rows(converted),
+            collect_html_memory_rows(converted, args.config),
         )
         if args.config not in KEYBOARDLESS_CONFIGS:
+            html_overrides = product_rule_module(args.config, "html_overrides")
             merged_rows = overlay_html_keyboard_rows(
                 merged_rows,
-                collect_html_keyboard_rows(converted, args.config),
+                html_overrides.collect_html_keyboard_rows(converted, args.config),
             )
         else:
             merged_rows = remove_l2_feature_rows(merged_rows, HTML_KEYBOARD_FEATURE)
         if args.config != "ts":
+            html_overrides = product_rule_module(args.config, "html_overrides")
             merged_rows = overlay_html_other_certification_rows(
                 merged_rows,
-                collect_html_other_certification_rows(converted),
+                html_overrides.collect_html_other_certification_rows(converted),
             )
         else:
             merged_rows = remove_l2_feature_rows(merged_rows, HTML_OTHER_CERTIFICATIONS_FEATURE)

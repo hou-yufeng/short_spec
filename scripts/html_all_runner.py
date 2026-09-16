@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib
 import json
 import os
 import re
@@ -70,6 +71,18 @@ HTML_OTHER_CERTIFICATIONS_FEATURE = "Other Certifications"
 HTML_MIL_SPEC_FEATURE = "Mil-Spec Test"
 HTML_OTHER_CERTIFICATIONS_SPEC_KEY = html_label_key(HTML_OTHER_CERTIFICATIONS_FEATURE)
 MOBILE_KEYBOARD_CONFIGS = {"com", "con", "smb", "tab"}
+PRODUCT_RULE_PACKAGES = {
+    "com": "commercial_laptop",
+    "con": "consumer_laptop",
+    "smb": "smb_laptop",
+    "tab": "tablet",
+    "dt": "desktop",
+    "ts": "thinkstation",
+}
+
+
+def product_rule_module(config_key: str, feature: str):
+    return importlib.import_module(f"html_product_rules.{PRODUCT_RULE_PACKAGES[config_key]}.{feature}")
 HTML_CASE_MATERIAL_STOP_KEYS = {
     html_label_key(label)
     for label in [
@@ -1104,13 +1117,17 @@ def main() -> None:
         full_rows = read_summary_rows(full_workbook)
         merged_rows = overlay_sdw_rows(full_rows, collect_sdw_rows(sdw_outputs))
         overridden_features = set(SDW_L2_FEATURES)
-        merged_rows = overlay_html_keyboard_rows(merged_rows, collect_html_keyboard_rows(converted, args.config))
+        html_overrides = product_rule_module(args.config, "html_overrides")
+        merged_rows = overlay_html_keyboard_rows(
+            merged_rows,
+            html_overrides.collect_html_keyboard_rows(converted, args.config),
+        )
         overridden_features.add(HTML_KEYBOARD_FEATURE)
         if args.config != "ts":
             merged_rows = overlay_html_case_material_rows(merged_rows, collect_html_case_material_rows(converted))
             merged_rows = overlay_html_other_certification_rows(
                 merged_rows,
-                collect_html_other_certification_rows(converted),
+                html_overrides.collect_html_other_certification_rows(converted),
             )
             overridden_features.add(HTML_CASE_MATERIAL_FEATURE)
             overridden_features.add(HTML_OTHER_CERTIFICATIONS_FEATURE)

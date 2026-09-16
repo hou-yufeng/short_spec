@@ -17,9 +17,9 @@ from batch_generate_shortspec_excel import (
     sanitize_sheet_name,
     write_xlsx,
 )
-from keyboard_shortspec_common import summarize_desktop_keyboard_from_lines
-from operating_system_shortspec_common import normalize_operating_system_values
-from special_features_shortspec_common import extract_special_features_from_lines
+from html_product_rules.desktop.keyboard import summarize_desktop_keyboard_from_lines
+from html_product_rules.desktop.operating_system import normalize_operating_system_values
+from html_product_rules.desktop.special_features import extract_special_features_from_lines
 
 
 TOP_LEVEL_SECTIONS = [

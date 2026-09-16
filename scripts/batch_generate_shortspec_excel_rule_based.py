@@ -14,9 +14,9 @@ from batch_generate_shortspec_excel import (
     save_generation_texts,
     write_xlsx,
 )
-from operating_system_shortspec_common import normalize_operating_system_values
-from keyboard_shortspec_common import summarize_mobile_keyboard
-from special_features_shortspec_common import normalize_special_feature_values
+from html_product_rules.commercial_laptop.operating_system import normalize_operating_system_values
+from html_product_rules.commercial_laptop.keyboard import summarize_mobile_keyboard
+from html_product_rules.commercial_laptop.special_features import normalize_special_feature_values
 
 
 TOP_LEVEL_SECTIONS = [

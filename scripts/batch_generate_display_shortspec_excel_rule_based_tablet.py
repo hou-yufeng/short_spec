@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from display_shortspec_common import DisplayToolConfig, run
+from html_product_rules.tablet.display import DisplayToolConfig, run
 
 
 CONFIG = DisplayToolConfig(
