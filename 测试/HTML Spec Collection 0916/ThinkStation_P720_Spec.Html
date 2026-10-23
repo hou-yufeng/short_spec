@@ -1,0 +1,793 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="/FrameworkFiles/iframeResizer/iframeResizer.contentWindow.min.js"></script>
+    <script src="/FrameworkFiles/jquery-2.1.1.min.js"></script>
+    <style>
+        @font-face {
+            font-family: "Gotham-Book";
+            src: url('/Resource/Font/Gotham-Book.otf');
+        }
+
+        * {
+            color: #646363;
+            padding: 0;
+            margin: 0;
+            font-size: 14px;
+            font-family: "Gotham-Book" !important;
+        }
+
+        h1 {
+            color: #E1251B;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .level1-content-container {
+            margin-bottom: 50px;
+        }
+
+        .level2-dd {
+            display: none;
+        }
+
+        h2 {
+            color: #294E95;
+            margin-top: 25px;
+            font-size: 18px;
+        }
+
+        h3 {
+            padding-top: 10px;
+            padding-bottom: 5px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .level1-dt a {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .level2-dt {
+            line-height: 23px;
+            vertical-align: central;
+        }
+
+        .level2-dt a {
+            margin-left: -15px;
+        }
+
+        .level3-dt a {}
+
+        a:hover {
+            color: #294E95;
+            text-decoration: underline;
+        }
+
+        .active {
+            color: #294E95;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .level2-nav-container {
+            padding-left: 15px;
+            cursor: pointer;
+        }
+
+
+        .level3-nav-container {
+            padding-left: 15px;
+        }
+
+        dt,
+        dd {
+            padding: 3px 5px;
+        }
+
+        .fn-content-table {
+            border: 1px solid #808080;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .fn-content-table td {
+            border: 1px solid #808080;
+            padding: 10px 5px;
+            white-space: pre-line !important;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+        .sidebar {
+            float: left;
+            width: 249px;
+            overflow-y: scroll;
+            height: 100%;
+            position: fixed;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            /*对垂直流动条有效*/
+            height: 5px;
+            /*对水平流动条有效*/
+        }
+
+        /*定义滚动条的轨道颜色、内阴影及圆角*/
+        ::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, .3);
+            background-color: mintcream;
+            border-radius: 3px;
+        }
+
+
+        /*定义滑块颜色、内阴影及圆角*/
+        ::-webkit-scrollbar-thumb {
+            border-radius: 7px;
+            -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, .3);
+            background-color: #e8e5e5;
+        }
+
+        /*定义两端按钮的样式*/
+        ::-webkit-scrollbar-button {
+            background-color: none;
+        }
+
+        /*定义右下角汇合处的样式*/
+        ::-webkit-scrollbar-corner {
+            background: khaki;
+        }
+
+        .spec-content {
+            float: left;
+            margin-left: 260px;
+        }
+
+        .fn-header {
+            padding: 5px;
+            white-space: nowrap;
+        }
+
+        .fn-content {
+            padding: 5px;
+        }
+
+        .attr-header {
+            text-align: center;
+            background-color: #e8e5e5;
+        }
+
+        .titleProductName {
+            max-height: 20px;
+            background-color: white;
+            width: 100%;
+            text-align: left;
+            font-size: 20px;
+            box-shadow: 0px 10px 10px -10px #000000;
+            padding: 10px;
+            position: fixed;
+            top: 0px;
+            font-weight: 600;
+            padding-left: 30px;
+        }
+
+        .divFeatureValue ul {
+            list-style: outside;
+            padding-left: 20px;
+        }
+
+        .divFeatureValue {
+            max-width: 100%;
+        }
+
+        .noteTitle {
+            font-size: 11px;
+        }
+
+        .noteContent {
+            margin-top: 3px;
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        .noteContent ul {
+            list-style: decimal !important;
+            padding-left: 20px;
+        }
+
+        .noteContent ul li,
+        .noteContent ul li span,
+        .noteContent ul li span a,
+        .noteContent ul li span a u {
+            font-size: 8pt !important;
+        }
+
+        .NoteHR {
+            BORDER-BOTTOM-STYLE: none;
+            BORDER-LEFT-STYLE: none;
+            BORDER-RIGHT-STYLE: none;
+            BORDER-TOP-STYLE: dotted;
+            width: 12%;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            height: 1px;
+            border-top: 2px dotted #808080;
+        }
+
+        .menuhighlight {
+            background-color: #E0FFFF !important;
+        }
+
+        .supText {
+            font-size: 0.6em;
+            color: #294E95;
+        }
+
+        .optionalStar {
+            color: #294E95;
+        }
+
+        .imagePanel {
+            /*height: 400px;*/
+            max-width: 95%;
+            margin: 0px auto;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .imagePanel img {
+            margin: 10px auto;
+            width: auto;
+            height: auto;
+            max-height: 100%;
+            max-width: 100%;
+        }
+
+        .overviewTextPanel {
+            margin: 50px auto 20px auto;
+            width: 100%;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .overviewTextPanel table {
+            margin: 0px auto;
+            border: 1px solid #808080;
+            border-collapse: collapse;
+        }
+
+        .overviewTextPanel table td {
+            font-size: 9pt;
+            text-align: left;
+            /*padding: 4px 10px;*/
+            /*width: 50%;*/
+            /*border: 0.5px solid gray;*/
+        }
+
+        .overviewTextPanel table td.overview_sortnumber {
+            width: 22px !important;
+            padding-left: 8px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+            border-top: 1px solid gray;
+            border-left: 1px solid gray;
+            border-bottom: 1px solid gray;
+        }
+
+        .overviewTextPanel table td.overview_text {
+            width: 335px !important;
+            border-top: 1px solid gray;
+            border-right: 1px solid gray;
+            border-bottom: 1px solid gray;
+            padding-right: 10px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+
+        .overviewNotePanel {
+            margin: auto;
+            padding: 10px;
+            font-style: italic;
+        }
+
+        .overviewNotePanel ul {
+            list-style-type: decimal;
+            list-style-position: inside;
+        }
+
+        .overviewNotePanel ul li {
+            white-space: pre-line;
+            font-size: 8pt !important;
+            white-space: pre-line;
+            margin-bottom: 3px;
+        }
+
+        .foldingiconDiv {
+            left: -20px;
+            top: 2px;
+            text-align: left;
+            display: inline;
+            position: relative;
+            vertical-align: central;
+        }
+
+        .foldingicon {
+            display: inline;
+        }
+
+        .foldingicon span svg {
+            top: 50%;
+            margin-top: -8px;
+        }
+
+        .iconHide {
+            display: none;
+        }
+
+        #div_disclamor {
+            margin-bottom: 0px;
+            /*white-space: pre-line;*/
+            margin-right: 50px;
+        }
+
+        #div_disclamor ul {
+            list-style-position: outside;
+            list-style-type: disc;
+            margin-left: 20px;
+            line-height: 20px;
+        }
+
+        #div_disclamor ul li {
+            /*margin-top: 10px;*/
+        }
+
+        .note_number {
+            color: #294E95;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="titleHead">
+        <div class="titleProductName">
+            ThinkStation P720
+                <span style="margin-left:20%;">Last Modify Time: 2023-12-11 10:10:38</span>
+        </div>
+    </div>
+    <div style="width:100% !important;height:50px;" class="spaceDiv"></div>
+    <div id="div_Container">
+        <div class="sidebar">
+            <dl class='level1-nav-container'>
+<dt class='level1-dt'><a id='nav_l1_Overview'  href='#l1_Overview'>Overview</a></dt><dd class='level1-dd'></dd><dt class='level1-dt'><a id='nav_l1_Performance' href='#l1_Performance'>Performance</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Processor' href='#l2_Processor'>Processor</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_ProcessorFamily' href='#l3_ProcessorFamily'>Processor Family</a></dt><dt class='level3-dt'><a id='nav_l3_Processor' href='#l3_Processor'>Processor</a></dt><dt class='level3-dt'><a id='nav_l3_ProcessorSockets' href='#l3_ProcessorSockets'>Processor Sockets</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_OperatingSystem' href='#l2_OperatingSystem'>Operating System</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_OperatingSystem' href='#l3_OperatingSystem'>Operating System</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Graphics' href='#l2_Graphics'>Graphics</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_DiscreteGraphicsSupport' href='#l3_DiscreteGraphicsSupport'>Discrete Graphics Support</a></dt><dt class='level3-dt'><a id='nav_l3_DiscreteGraphicsOffering' href='#l3_DiscreteGraphicsOffering'>Discrete Graphics Offering</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_MonitorSupport' href='#l2_MonitorSupport'>Monitor Support</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_MonitorSupport' href='#l3_MonitorSupport'>Monitor Support</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Chipset' href='#l2_Chipset'>Chipset</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Chipset' href='#l3_Chipset'>Chipset</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Memory' href='#l2_Memory'>Memory</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_MaxMemory' href='#l3_MaxMemory'>Max Memory</a></dt><dt class='level3-dt'><a id='nav_l3_MemoryType' href='#l3_MemoryType'>Memory Type</a></dt><dt class='level3-dt'><a id='nav_l3_MemorySlots' href='#l3_MemorySlots'>Memory Slots</a></dt><dt class='level3-dt'><a id='nav_l3_MemoryProtection' href='#l3_MemoryProtection'>Memory Protection</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Storage' href='#l2_Storage'>Storage</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_MaxStorageSupport' href='#l3_MaxStorageSupport'>Max Storage Support</a></dt><dt class='level3-dt'><a id='nav_l3_StorageType' href='#l3_StorageType'>Storage Type</a></dt><dt class='level3-dt'><a id='nav_l3_StorageControllers' href='#l3_StorageControllers'>Storage Controllers</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_RemovableStorage' href='#l2_RemovableStorage'>Removable Storage</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_OpticalSupport' href='#l3_OpticalSupport'>Optical Support</a></dt><dt class='level3-dt'><a id='nav_l3_CardReader' href='#l3_CardReader'>Card Reader</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_MultiMedia' href='#l2_MultiMedia'>Multi-Media</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_AudioChip' href='#l3_AudioChip'>Audio Chip</a></dt><dt class='level3-dt'><a id='nav_l3_Speakers' href='#l3_Speakers'>Speakers</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_PowerSupply' href='#l2_PowerSupply'>Power Supply</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_PowerSupply' href='#l3_PowerSupply'>Power Supply</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Design' href='#l1_Design'>Design</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Mechanical' href='#l2_Mechanical'>Mechanical</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_FormFactor' href='#l3_FormFactor'>Form Factor</a></dt><dt class='level3-dt'><a id='nav_l3_DimensionsWxDxH' href='#l3_DimensionsWxDxH'>Dimensions (WxDxH)</a></dt><dt class='level3-dt'><a id='nav_l3_Weight' href='#l3_Weight'>Weight</a></dt><dt class='level3-dt'><a id='nav_l3_Bays' href='#l3_Bays'>Bays</a></dt><dt class='level3-dt'><a id='nav_l3_FlexBays' href='#l3_FlexBays'>Flex Bays</a></dt><dt class='level3-dt'><a id='nav_l3_ExpansionSlots' href='#l3_ExpansionSlots'>Expansion Slots</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Connectivity' href='#l1_Connectivity'>Connectivity</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Network' href='#l2_Network'>Network</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_WLANBluetooth' href='#l3_WLANBluetooth'>WLAN + Bluetooth</a></dt><dt class='level3-dt'><a id='nav_l3_OnboardEthernet' href='#l3_OnboardEthernet'>Onboard Ethernet</a></dt><dt class='level3-dt'><a id='nav_l3_OptionalEthernet' href='#l3_OptionalEthernet'>Optional Ethernet</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Ports' href='#l2_Ports'>Ports</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_FrontPorts' href='#l3_FrontPorts'>Front Ports</a></dt><dt class='level3-dt'><a id='nav_l3_OptionalFrontPorts' href='#l3_OptionalFrontPorts'>Optional Front Ports</a></dt><dt class='level3-dt'><a id='nav_l3_RearPorts' href='#l3_RearPorts'>Rear Ports</a></dt><dt class='level3-dt'><a id='nav_l3_OptionalRearPorts' href='#l3_OptionalRearPorts'>Optional Rear Ports</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_SecurityPrivacy' href='#l1_SecurityPrivacy'>Security & Privacy</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Security' href='#l2_Security'>Security</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_SecurityChip' href='#l3_SecurityChip'>Security Chip</a></dt><dt class='level3-dt'><a id='nav_l3_PhysicalLocks' href='#l3_PhysicalLocks'>Physical Locks</a></dt><dt class='level3-dt'><a id='nav_l3_ChassisIntrusionSwitch' href='#l3_ChassisIntrusionSwitch'>Chassis Intrusion Switch</a></dt><dt class='level3-dt'><a id='nav_l3_BIOSSecurity' href='#l3_BIOSSecurity'>BIOS Security</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Manageability' href='#l1_Manageability'>Manageability</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_SystemManagement' href='#l2_SystemManagement'>System Management</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_SystemManagement' href='#l3_SystemManagement'>System Management</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Diagnostic' href='#l2_Diagnostic'>Diagnostic</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Diagnostic' href='#l3_Diagnostic'>Diagnostic</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Service' href='#l1_Service'>Service</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Warranty' href='#l2_Warranty'>Warranty</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_BaseWarranty' href='#l3_BaseWarranty'>Base Warranty</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_OperatingRequirements' href='#l1_OperatingRequirements'>Operating Requirements</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_OperatingEnvironment' href='#l2_OperatingEnvironment'>Operating Environment</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Temperature' href='#l3_Temperature'>Temperature</a></dt><dt class='level3-dt'><a id='nav_l3_Altitude' href='#l3_Altitude'>Altitude</a></dt><dt class='level3-dt'><a id='nav_l3_RelativeHumidity' href='#l3_RelativeHumidity'>Relative Humidity</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Certifications' href='#l1_Certifications'>Certifications</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_GreenCertifications' href='#l2_GreenCertifications'>Green Certifications</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_GreenCertifications' href='#l3_GreenCertifications'>Green Certifications</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_ISVCertifications' href='#l2_ISVCertifications'>ISV Certifications</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_ISVCertifications' href='#l3_ISVCertifications'>ISV Certifications</a></dt></dl></dd></dl>
+</dd>
+</dl>
+        </div>
+        <div class="spec-content">
+            <h1>Overview<a id='l1_Overview'></a></h1><div class='level1-content-container'><div class='imagePanel'><img src='/syspool/Sys/PDF\ThinkStation\ThinkStation_P720\ThinkStation_P720_OverViewPic.jpg' /></div><div class='overviewTextPanel'><table cellpadding='0' cellspacing='0'><tbody><tr><td class='overview_sortnumber'>1.</td><td class='overview_text'>Power button</td><td class='overview_sortnumber'>8.</td><td class='overview_text'>Line-out (3.5mm)</td></tr><tr><td class='overview_sortnumber'>2.</td><td class='overview_text'>Card reader</td><td class='overview_sortnumber'>9.</td><td class='overview_text'>Serial *</td></tr><tr><td class='overview_sortnumber'>3.</td><td class='overview_text'>4x USB 3.2 Gen 1</td><td class='overview_sortnumber'>10.</td><td class='overview_text'>2x PS/2 ports (keyboard / mouse)</td></tr><tr><td class='overview_sortnumber'>4.</td><td class='overview_text'>Headphone / microphone combo jack (3.5mm)</td><td class='overview_sortnumber'>11.</td><td class='overview_text'>2x USB 2.0</td></tr><tr><td class='overview_sortnumber'>5.</td><td class='overview_text'>2x Flex bay</td><td class='overview_sortnumber'>12.</td><td class='overview_text'>4x USB 3.2 Gen 1</td></tr><tr><td class='overview_sortnumber'>6.</td><td class='overview_text'>Microphone jack (3.5mm)</td><td class='overview_sortnumber'>13.</td><td class='overview_text'>2x Ethernet (RJ-45)</td></tr><tr><td class='overview_sortnumber'>7.</td><td class='overview_text'>Line-in (3.5mm)</td><td class='overview_sortnumber'></td><td class='overview_text'></td></tr></tr></tbody></table></div><div class='overviewNotePanel'>Notes:<br /><div>
+<ul>
+<li>Items with * are only available on selected models</li>
+</div></div></div>
+                <h1>Performance<a id='l1_Performance'></a></h1><div class='level1-content-container'><h2 specStructure='Processor'>Processor<a id='l2_Processor'></a></h2><div specStructure='Processor'><h3>Processor Family<a id='l3_ProcessorFamily'></a></h3><div class='divFeatureValue'><span>Up to two 165W Gen 1 or Gen 2 Intel&reg; Xeon&reg; Scalable family processors, Bronze, Silver, Gold, or Platinum</span></div></div><div specStructure='Processor'><h3>Processor<span class='optionalStar'>**</span><sup><span class='supText'>[1]</span></sup><a id='l3_Processor'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Processor Name</td><td class='attr-header'>Cores</td><td class='attr-header'>Threads</td><td class='attr-header'>Base Frequency</td><td class='attr-header'>Max Frequency</td><td class='attr-header'>Cache</td><td class='attr-header'>Memory Support</td></tr>
+<tr>
+<td>Xeon W-3223</td><td>8</td><td>16</td><td>3.5GHz</td><td>4.0GHz</td><td>16.5MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon W-3225</td><td>8</td><td>16</td><td>3.7GHz</td><td>4.3GHz</td><td>16.5MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Bronze 3104</td><td>6</td><td>6</td><td>1.7GHz</td><td>-</td><td>8.25MB</td><td>DDR4-2133</td></tr>
+<tr>
+<td>Xeon Bronze 3106</td><td>8</td><td>8</td><td>1.7GHz</td><td>-</td><td>11MB</td><td>DDR4-2133</td></tr>
+<tr>
+<td>Xeon Bronze 3204</td><td>6</td><td>6</td><td>1.9GHz</td><td>1.9GHz</td><td>8.25MB</td><td>DDR4-2133</td></tr>
+<tr>
+<td>Xeon Bronze 3206R</td><td>8</td><td>8</td><td>1.9GHz</td><td>1.9GHz</td><td>11MB</td><td>DDR4-2133</td></tr>
+<tr>
+<td>Xeon Silver 4108</td><td>8</td><td>16</td><td>1.8GHz</td><td>3.0GHz</td><td>11MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4109T</td><td>8</td><td>16</td><td>2.0GHz</td><td>3.0GHz</td><td>11MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4110</td><td>8</td><td>16</td><td>2.1GHz</td><td>3.0GHz</td><td>11MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4112</td><td>4</td><td>8</td><td>2.6GHz</td><td>3.0GHz</td><td>8.25MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4114</td><td>10</td><td>20</td><td>2.2GHz</td><td>3.0GHz</td><td>13.75MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4114T</td><td>10</td><td>20</td><td>2.2GHz</td><td>3.0GHz</td><td>13.75MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4116</td><td>12</td><td>24</td><td>2.1GHz</td><td>3.0GHz</td><td>16.5MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4208</td><td>8</td><td>16</td><td>2.1GHz</td><td>3.2GHz</td><td>11MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4209T</td><td>8</td><td>16</td><td>2.2GHz</td><td>3.2GHz</td><td>11MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4210</td><td>10</td><td>20</td><td>2.2GHz</td><td>3.2GHz</td><td>13.75MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4210R</td><td>10</td><td>20</td><td>2.4GHz</td><td>3.2GHz</td><td>13.75MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4214</td><td>12</td><td>24</td><td>2.2GHz</td><td>3.2GHz</td><td>16.5MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4214R</td><td>12</td><td>24</td><td>2.4GHz</td><td>3.5GHz</td><td>16.5MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4215</td><td>8</td><td>16</td><td>2.5GHz</td><td>3.5GHz</td><td>11MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4215R</td><td>8</td><td>16</td><td>3.2GHz</td><td>4.0GHz</td><td>11MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Silver 4216</td><td>16</td><td>32</td><td>2.1GHz</td><td>3.2GHz</td><td>22MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Gold 5115</td><td>10</td><td>20</td><td>2.4GHz</td><td>3.2GHz</td><td>13.75MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Gold 5118</td><td>12</td><td>24</td><td>2.3GHz</td><td>3.2GHz</td><td>16.5MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Gold 5120</td><td>14</td><td>28</td><td>2.2GHz</td><td>3.2GHz</td><td>19.25MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Gold 5120T</td><td>14</td><td>28</td><td>2.2GHz</td><td>3.2GHz</td><td>19.25MB</td><td>DDR4-2400</td></tr>
+<tr>
+<td>Xeon Gold 5122</td><td>4</td><td>8</td><td>3.6GHz</td><td>3.7GHz</td><td>16.5MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 5215</td><td>10</td><td>20</td><td>2.5GHz</td><td>3.4GHz</td><td>13.75MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 5217</td><td>8</td><td>16</td><td>3.0GHz</td><td>3.7GHz</td><td>11MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 5218</td><td>16</td><td>32</td><td>2.3GHz</td><td>3.9GHz</td><td>22MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 5220</td><td>18</td><td>36</td><td>2.2GHz</td><td>3.9GHz</td><td>24.75MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 5222</td><td>4</td><td>8</td><td>3.8GHz</td><td>3.9GHz</td><td>16.5MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6128</td><td>6</td><td>12</td><td>3.4GHz</td><td>3.7GHz</td><td>19.25MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 6130</td><td>16</td><td>32</td><td>2.1GHz</td><td>3.7GHz</td><td>22MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 6134</td><td>8</td><td>16</td><td>3.2GHz</td><td>3.7GHz</td><td>24.75MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 6136</td><td>12</td><td>24</td><td>3.0GHz</td><td>3.7GHz</td><td>24.75MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 6138</td><td>20</td><td>40</td><td>2.0GHz</td><td>3.7GHz</td><td>27.5MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 6142</td><td>16</td><td>32</td><td>2.6GHz</td><td>3.7GHz</td><td>22MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 6146</td><td>12</td><td>24</td><td>3.2GHz</td><td>4.2GHz</td><td>24.75MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 6148</td><td>20</td><td>40</td><td>2.4GHz</td><td>3.7GHz</td><td>27.5MB</td><td>DDR4-2666</td></tr>
+<tr>
+<td>Xeon Gold 6226</td><td>12</td><td>24</td><td>2.7GHz</td><td>3.7GHz</td><td>19.25MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6226R</td><td>16</td><td>32</td><td>2.9GHz</td><td>3.9GHz</td><td>22MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6230</td><td>20</td><td>40</td><td>2.1GHz</td><td>3.9GHz</td><td>27.5MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6234</td><td>8</td><td>16</td><td>3.3GHz</td><td>4.0GHz</td><td>24.75MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6238T</td><td>22</td><td>44</td><td>1.9GHz</td><td>3.7GHz</td><td>30.25MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6240R</td><td>24</td><td>48</td><td>2.4GHz</td><td>4.0GHz</td><td>35.75MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6242</td><td>16</td><td>32</td><td>2.8GHz</td><td>3.9GHz</td><td>22MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6244</td><td>8</td><td>16</td><td>3.6GHz</td><td>4.4GHz</td><td>24.75MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6246</td><td>12</td><td>24</td><td>3.3GHz</td><td>4.2GHz</td><td>24.75MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Gold 6248</td><td>20</td><td>40</td><td>2.5GHz</td><td>3.9GHz</td><td>27.5MB</td><td>DDR4-2933</td></tr>
+<tr>
+<td>Xeon Platinum 8160T</td><td>24</td><td>48</td><td>2.1GHz</td><td>3.7GHz</td><td>33MB</td><td>DDR4-2666</td></tr>
+</table></div></div><div specStructure='Processor'><h3>Processor Sockets<a id='l3_ProcessorSockets'></a></h3><div class='divFeatureValue'><span>2x FCLGA3647</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>Intel&reg; Max Turbo frequency will vary depending on application workload and the hardware and software configurations, see<a href="http://www.intel.com/technology/turboboost/" target="_blank">
+<u> http://www.intel.com/technology/turboboost/ </u></a>for more information.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>ProductLine Default</strong></td></table></div>
+<h2 specStructure='Operating System'>Operating System<a id='l2_OperatingSystem'></a></h2><div specStructure='Operating System'><h3>Operating System<span class='optionalStar'>**</span><a id='l3_OperatingSystem'></a></h3><div class='divFeatureValue'><ul><li><span>Windows&reg; 11 Pro for Workstations</span></li>
+<li><span>Windows&reg; 11 DG Windows&reg; 10 Pro 64 for Workstations</span></li>
+<li><span>Windows&reg; 10 Pro 64 for Workstations</span></li>
+<li><span>Ubuntu Linux LTS</span></li>
+<li><span>Red Hat Enterprise Linux 8.5 (certified only, for detailed and latest information, please visit <a href="https://catalog.redhat.com/hardware/workstations/search" target="_blank">
+<u>Red Hat Certified Hardware</u></a>)</span></li>
+<li><span>No preload operating system</span></li>
+</ul></div></div><h2 specStructure='Graphics'>Graphics<a id='l2_Graphics'></a></h2><div specStructure='Graphics'><h3>Discrete Graphics Support<a id='l3_DiscreteGraphicsSupport'></a></h3><div class='divFeatureValue'><span>Supports up to two NVIDIA&reg; Quadro&reg; RTX 8000 with NVLink</span></div></div><div specStructure='Graphics'><h3>Discrete Graphics Offering<span class='optionalStar'>***</span><a id='l3_DiscreteGraphicsOffering'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Graphics</td><td class='attr-header'>Memory</td><td class='attr-header'>Power</td><td class='attr-header'>Connector</td><td class='attr-header'>Form Factor</td><td class='attr-header'>SLI / NVLink</td></tr>
+<tr>
+<td>Quadro&reg; RTX 8000</td><td>48GB GDDR6</td><td>295W</td><td>4x DP 1.4, 1x VirtualLink</td><td>Dual slot</td><td>NVLink</td></tr>
+<tr>
+<td>Quadro&reg; RTX 6000</td><td>24GB GDDR6</td><td>295W</td><td>4x DP 1.4, 1x VirtualLink</td><td>Dual slot</td><td>NVLink</td></tr>
+<tr>
+<td>Quadro&reg; RTX 5000</td><td>16GB GDDR6</td><td>265W</td><td>4x DP 1.4, 1x VirtualLink</td><td>Dual slot</td><td>NVLink</td></tr>
+<tr>
+<td>Quadro&reg; RTX 4000</td><td>8GB GDDR6</td><td>160W</td><td>3x DP 1.4, 1x VirtualLink</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; P620</td><td>2GB GDDR5</td><td>40W</td><td>4x miniDP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; P2200</td><td>5GB GDDR5</td><td>75W</td><td>4x DP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; P1000</td><td>4GB GDDR5</td><td>50W</td><td>4x miniDP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; GV100</td><td>32GB HBM2</td><td>250W</td><td>4x DP 1.4</td><td>Dual slot</td><td>NVLink</td></tr>
+<tr>
+<td>NVIDIA&reg; T600</td><td>4GB GDDR6</td><td>40W</td><td>4x miniDP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>NVIDIA&reg; T400</td><td>2GB GDDR6</td><td>40W</td><td>3x miniDP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>NVIDIA&reg; RTX A5500</td><td>24GB GDDR6 with ECC</td><td>230W</td><td>4x DP 1.4a</td><td>Dual slot</td><td>NVLink</td></tr>
+<tr>
+<td>NVIDIA&reg; RTX A5000</td><td>24GB GDDR6 with ECC</td><td>230W</td><td>4x DP 1.4a</td><td>Dual slot</td><td>NVLink</td></tr>
+<tr>
+<td>NVIDIA&reg; RTX A4500</td><td>20GB GDDR6 with ECC</td><td>200W</td><td>4x DP 1.4</td><td>Dual slot</td><td>NVLink</td></tr>
+<tr>
+<td>NVIDIA&reg; RTX A4000</td><td>16GB GDDR6 with ECC</td><td>140W</td><td>4x DP 1.4a</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>NVIDIA&reg; RTX A2000 12GB</td><td>12GB GDDR6</td><td>70W</td><td>4x miniDP 1.4a</td><td>Dual slot</td><td>None</td></tr>
+<tr>
+<td>NVIDIA&reg; RTX A2000</td><td>6GB GDDR6</td><td>70W</td><td>4x miniDP 1.4a</td><td>Dual slot</td><td>None</td></tr>
+<tr>
+<td>NVIDIA&reg; T1000 8GB</td><td>8GB GDDR6</td><td>50W</td><td>4x miniDP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; GP100</td><td>16GB HBM2</td><td>235W</td><td>1x DVI-D DL, 4x DP</td><td>Dual slot</td><td>NVLink</td></tr>
+<tr>
+<td>NVIDIA&reg; T1000</td><td>4GB GDDR6</td><td>50W</td><td>4x miniDP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>NVIDIA&reg; T400 4GB</td><td>4GB GDDR6</td><td>40W</td><td>3x miniDP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; P400</td><td>2GB GDDR5</td><td>30W</td><td>3x miniDP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; P2000</td><td>5GB GDDR5</td><td>75W</td><td>4x DP</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; P4000</td><td>8GB GDDR5</td><td>120W</td><td>4x DP 1.4</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; P5000</td><td>16GB GDDR5X</td><td>180W</td><td>1x DVI-D DL, 4x DP 1.4</td><td>Dual slot</td><td>SLI</td></tr>
+<tr>
+<td>Quadro&reg; P600</td><td>2GB GDDR5</td><td>45W</td><td>4x miniDP</td><td>Single slot</td><td>None</td></tr>
+<tr>
+<td>Quadro&reg; P6000</td><td>24GB GDDR5X</td><td>250W</td><td>1x DVI-D DL, 4x DP 1.4</td><td>Dual slot</td><td>SLI</td></tr>
+</table></div></div><h2 specStructure='Monitor Support'>Monitor Support<a id='l2_MonitorSupport'></a></h2><div specStructure='Monitor Support'><h3>Monitor Support<a id='l3_MonitorSupport'></a></h3><div class='divFeatureValue'><span>Supports multiple displays via discrete graphics, the number of maximum monitors supported depends on the graphic card in use</span></div></div><h2 specStructure='Chipset'>Chipset<a id='l2_Chipset'></a></h2><div specStructure='Chipset'><h3>Chipset<a id='l3_Chipset'></a></h3><div class='divFeatureValue'><span>Intel&reg; C621 chipset</span></div></div><h2 specStructure='Memory'>Memory<a id='l2_Memory'></a></h2><div specStructure='Memory'><h3>Max Memory<sup><span class='supText'>[1]</span></sup><a id='l3_MaxMemory'></a></h3><div class='divFeatureValue'><span>Up to 768GB (12x 64GB RDIMM)</span></div></div><div specStructure='Memory'><h3>Memory Type<span class='optionalStar'>**</span><a id='l3_MemoryType'></a></h3><div class='divFeatureValue'><ul><li><span>DDR4-2666 RDIMM ECC</span></li>
+<li><span>DDR4-2933 RDIMM ECC</span></li>
+</ul></div></div><div specStructure='Memory'><h3>Memory Slots<a id='l3_MemorySlots'></a></h3><div class='divFeatureValue'><span>12 DDR4 DIMM slots, 12 channels capable (6 DIMM slots with 6 channels per processor)</span></div></div><div specStructure='Memory'><h3>Memory Protection<a id='l3_MemoryProtection'></a></h3><div class='divFeatureValue'><span>ECC</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The max memory is based on the test results with current Lenovo&reg; memory offerings.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Classification Default</strong></td></table></div>
+<h2 specStructure='Storage'>Storage<a id='l2_Storage'></a></h2><div specStructure='Storage'><h3>Max Storage Support<sup><span class='supText'>[1]</span></sup><a id='l3_MaxStorageSupport'></a></h3><div class='divFeatureValue'><span>Up to 6x 3.5" SATA HDD / 10x 2.5" SATA HDD / 8x 2.5" SAS HDD / 10x 2.5" SATA SSD / 4x 2.5" PCIe&reg; SSD + 9x M.2 PCIe&reg; SSD + 2x PCIe&reg; AIC SSD
+• 3.5" HDD up to 6TB each
+• 2.5" SATA HDD up to 500GB each
+• 2.5" SAS HDD up to 600GB each
+• 2.5" SATA SSD up to 2TB each
+• M.2 SSD up to 2TB each
+• 2.5" PCIe&reg; SSD up to 1.5TB each
+• PCIe&reg; AIC SSD up to 480GB each</span></div></div><div specStructure='Storage'><h3>Storage Type<span class='optionalStar'>***</span><a id='l3_StorageType'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Disk Type</td><td class='attr-header'>Interface</td><td class='attr-header'>RPM</td><td class='attr-header'>Offering</td></tr>
+<tr>
+<td>2.5" SATA HDD</td><td>SATA 6Gb/s</td><td>7.2K</td><td>500GB / 500GB FIPS</td></tr>
+<tr>
+<td>3.5" SATA HDD</td><td>SATA 6Gb/s</td><td>7.2K</td><td>1TB / 2TB / 4TB / 6TB</td></tr>
+<tr>
+<td>2.5" PCIe&reg; SSD</td><td>PCIe&reg; NVMe&reg;</td><td>-</td><td>1.5TB</td></tr>
+<tr>
+<td>2.5" SAS HDD</td><td>SAS 12Gb/s</td><td>10K</td><td>300GB / 600GB</td></tr>
+<tr>
+<td>2.5" SATA SSD</td><td>SATA 6Gb/s</td><td>-</td><td>256GB / 512GB / 1TB / 2TB</td></tr>
+<tr>
+<td>M.2 PCIe&reg; SSD</td><td>PCIe&reg; NVMe&reg;</td><td>-</td><td>256GB / 512GB / 1TB / 2TB</td></tr>
+<tr>
+<td>PCIe&reg; AIC SSD</td><td>PCIe&reg; NVMe&reg;</td><td>-</td><td>480GB</td></tr>
+</table></div></div><div specStructure='Storage'><h3>Storage Controllers<a id='l3_StorageControllers'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Storage Controller</td><td class='attr-header'>Type</td><td class='attr-header'>Interface</td><td class='attr-header'>RAID</td><td class='attr-header'>Cache</td></tr>
+<tr>
+<td>9440-8i PCIe&reg;</td><td>Optional</td><td>SAS 12.0Gb/s, SATA
+6.0Gb/s</td><td>0/1/10/5</td><td>None</td></tr>
+<tr>
+<td>Onboard Intel&reg; RSTe SATA RAID</td><td>Standard</td><td>SATA 6.0Gb/s</td><td>0/1/10/5</td><td>None</td></tr>
+<tr>
+<td>9460-16i PCIe&reg;</td><td>Optional</td><td>SAS 12.0Gb/s, SATA
+6.0Gb/s</td><td>0/1/10/5/6</td><td>4GB DDR4, SuperCap</td></tr>
+<tr>
+<td>NVMe&reg; Basic</td><td>Optional</td><td>PCIe&reg; NVMe&reg;</td><td>0/1/10</td><td>None</td></tr>
+<tr>
+<td>NVMe&reg; Premium</td><td>Optional</td><td>PCIe&reg; NVMe&reg;</td><td>0/1/10/5</td><td>None</td></tr>
+<tr>
+<td>NVMe&reg; for Intel&reg; SSD</td><td>Optional</td><td>PCIe&reg; NVMe&reg;</td><td>0/1/10/5</td><td>None</td></tr>
+</table></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The storage capacity supported is based on the test results with current Lenovo&reg; storage offerings.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Classification Default</strong></td></table></div>
+<h2 specStructure='Removable Storage'>Removable Storage<a id='l2_RemovableStorage'></a></h2><div specStructure='Removable Storage'><h3>Optical Support<a id='l3_OpticalSupport'></a></h3><div class='divFeatureValue'><span>Up to two HH or 9.0mm optical drive, DVD-ROM, DVD±RW, and Blu-ray</span></div></div><div specStructure='Removable Storage'><h3>Card Reader<a id='l3_CardReader'></a></h3><div class='divFeatureValue'><ul><li><span>15-in-1 card reader</span></li>
+<li><span>SD card reader</span></li>
+<li><span>No card reader</span></li>
+</ul></div></div><h2 specStructure='Multi-Media'>Multi-Media<a id='l2_MultiMedia'></a></h2><div specStructure='Multi-Media'><h3>Audio Chip<a id='l3_AudioChip'></a></h3><div class='divFeatureValue'><span>High Definition (HD) Audio, Realtek&reg; ALC662 codec</span></div></div><div specStructure='Multi-Media'><h3>Speakers<a id='l3_Speakers'></a></h3><div class='divFeatureValue'><span>Single speaker</span></div></div><h2 specStructure='Power Supply'>Power Supply<a id='l2_PowerSupply'></a></h2><div specStructure='Power Supply'><h3>Power Supply<span class='optionalStar'>**</span><a id='l3_PowerSupply'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Power</td><td class='attr-header'>Type</td><td class='attr-header'>Efficiency</td><td class='attr-header'>Key Features</td></tr>
+<tr>
+<td>690W</td><td>Fixed</td><td>92%</td><td>Autosensing, 80 PLUS Platinum qualified</td></tr>
+<tr>
+<td>1000W</td><td>Fixed</td><td>92%</td><td>Autosensing, 80 PLUS Platinum qualified</td></tr>
+<tr>
+<td>900W</td><td>Fixed</td><td>92%</td><td>Autosensing, 80 PLUS Platinum qualified</td></tr>
+</table></div></div></div>
+<h1>Design<a id='l1_Design'></a></h1><div class='level1-content-container'><h2 specStructure='Mechanical'>Mechanical<a id='l2_Mechanical'></a></h2><div specStructure='Mechanical'><h3>Form Factor<a id='l3_FormFactor'></a></h3><div class='divFeatureValue'><span>Tower (36L)</span></div></div><div specStructure='Mechanical'><h3>Dimensions (WxDxH)<sup><span class='supText'>[1]</span></sup><a id='l3_DimensionsWxDxH'></a></h3><div class='divFeatureValue'><span>175 x 485 x 446 mm (6.89 x 19.1 x 17.6 inches, with feet)</span></div></div><div specStructure='Mechanical'><h3>Weight<sup><span class='supText'>[2]</span></sup><a id='l3_Weight'></a></h3><div class='divFeatureValue'><span>25.7 kg (56.7 lbs, maximum configuration)</span></div></div><div specStructure='Mechanical'><h3>Bays<sup><span class='supText'>[3]</span></sup><a id='l3_Bays'></a></h3><div class='divFeatureValue'><ul><li><span>2x 3.5" disk bay (standard)</span></li>
+<li><span>4x 3.5" disk bay (optional):
+2 bays come with 3rd disk or Storage Bay Upgrade Kit
+2 bays via flex bay</span></li>
+</ul></div></div><div specStructure='Mechanical'><h3>Flex Bays<a id='l3_FlexBays'></a></h3><div class='divFeatureValue'><span>2x flex bays, supports the following:
+• 2x half-height optical drives
+• 2x 5.25" 9.0mm optical drives
+• 1x 5.25" 9.0mm optical drive + 2x 3.5"/2.5" SATA SSD/HDD
+• 1x 3.5"/2.5" SATA SSD/HDD with Front Access Storage Enclosure
+• 1x flex module for the following options:
+   Tray 1: 9.0mm optical
+   Tray 2: 15-in-1 USB 3.1 Gen 1 reader, 2x Thunderbolt&trade;, or 4-digit diagnostic display 
+   Port 1 and 2: Front USB 3.1 Gen 1 Type-C or eSATA</span></div></div><div specStructure='Mechanical'><h3>Expansion Slots<a id='l3_ExpansionSlots'></a></h3><div class='divFeatureValue'><span>Supports 5 PCIe&reg; slots plus one PCI slot.
+• Slot 1: PCIe&reg; 3.0 x16, full height, full length, 75W, by CPU 2
+• Slot 2: PCIe&reg; 3.0 x16, full height, full length, 75W, double-width, by CPU 1
+• Slot 3: PCIe&reg; 3.0 x8, full height, full length, 25W, by CPU 1
+• Slot 4: PCIe&reg; 3.0 x16, full height, full length, 75W, double-width, by CPU 1
+• Slot 5: PCI, full height, full length, 25W
+• Slot 6: PCIe&reg; 3.0 x4, full height, half length, 25W, by PCH</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The system dimensions may vary depending on configurations.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Feature Default</strong></td><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[2]</span> <span>The system weight is approximate and based on results in Lenovo&reg; lab, which varies depending on the source of component, variance of the distribution of each component, and manufacturing process. It may not be the exact weight for each specific model.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Feature Default</strong></td><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[3]</span> <span>4x 3.5" bay can also support up to 8x 2.5" SSD / HDD with 2 disks per bay. Additional 9440-8i or 9460-16i PCIe&reg; adapter and other parts are needed.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Product</strong></td></table></div>
+</div>
+<h1>Connectivity<a id='l1_Connectivity'></a></h1><div class='level1-content-container'><h2 specStructure='Network'>Network<a id='l2_Network'></a></h2><div specStructure='Network'><h3>WLAN + Bluetooth&reg;<sup><span class='supText'>[1]</span></sup><a id='l3_WLANBluetooth'></a></h3><div class='divFeatureValue'><ul><li><span>Intel&reg; Dual-Band Wireless-AC 8265, 802.11ac Dual-Band 2x2 Wi-Fi&reg; + Bluetooth&reg; 4.2</span></li>
+<li><span>Intel&reg; Wi-Fi&reg; 6E AX210, 802.11ax 2x2 Wi-Fi&reg; + Bluetooth&reg; 5.1 (Bluetooth&reg; 5.3 hardware ready), Intel&reg; vPro&reg; technology support</span></li>
+<li><span>No WLAN and Bluetooth&reg;</span></li>
+</ul></div></div><div specStructure='Network'><h3>Onboard Ethernet<a id='l3_OnboardEthernet'></a></h3><div class='divFeatureValue'><span>Two Gigabit Ethernet, Intel&reg; Ethernet Connection I219-LM and I210-AT, 2x RJ-45, supports Wake-on-LAN</span></div></div><div specStructure='Network'><h3>Optional Ethernet<a id='l3_OptionalEthernet'></a></h3><div class='divFeatureValue'><span>Two additional Ethernet adapters support, up to four additional 10 GbE ports
+• Gigabit Ethernet, Intel&reg; I210-T1, 1x RJ-45, PCIe&reg; x1	
+• Gigabit Ethernet, Intel&reg; I350-T2, 2x RJ-45, PCIe&reg; x4		
+• Gigabit Ethernet, Intel&reg; I350-T4, 4x RJ-45, PCIe&reg; x4						
+• Gigabit Ethernet, Bitland BN8E88, 1x RJ-45, PCIe&reg; x1			
+• Gigabit Ethernet, Broadcom BCM5719, 4x RJ-45, PCIe&reg; x4	
+• Gigabit Ethernet, Broadcom BCM5720, 2x RJ-45, PCIe&reg; x1	
+• 5 Gigabit Ethernet, Marvell AQtion AQN-108, 1x RJ-45, PCIe&reg; x1
+• 10 Gigabit Ethernet, Intel&reg; X540-T2, 2x RJ-45, PCIe&reg; x8
+• 10 Gigabit Ethernet, Intel&reg; X550-T2, 2x RJ-45, PCIe&reg; x4	
+• 10 Gigabit Ethernet, Intel&reg; X710-DA2, 2x SFP+, PCIe&reg; x8		
+• 10 Gigabit Ethernet, Marvell AQtion AQN-107, 1x RJ-45, PCIe&reg; x4</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>Wi-Fi&reg; operation (including Wi-Fi&reg; 6, Wi-Fi&reg; 6E, Wi-Fi&reg; 7, etc.) is subject to the regulatory requirements of each country.
+Bluetooth&reg; may operate at a lower version than hardware design depending on the factors such as operating system, driver, etc.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Feature Default</strong></td></table></div>
+<h2 specStructure='Ports'>Ports<sup><span class='supText'>[1]</span></sup><a id='l2_Ports'></a></h2><div specStructure='Ports'><h3>Front Ports<a id='l3_FrontPorts'></a></h3><div class='divFeatureValue'><ul><li><span>1x USB 3.2 Gen 1 (Always On and fast charge)</span></li>
+<li><span>3x USB 3.2 Gen 1</span></li>
+<li><span>1x headphone / microphone combo jack (3.5mm)</span></li>
+</ul></div></div><div specStructure='Ports'><h3>Optional Front Ports<span class='optionalStar'>***</span><a id='l3_OptionalFrontPorts'></a></h3><div class='divFeatureValue'><ul><li><span>2x Thunderbolt&trade; 3 (with flex module, USB-C&reg; form, one supports video-out)</span></li>
+<li><span>1x USB-C&reg; 3.2 Gen 1 (support data transfer, with flex module)</span></li>
+<li><span>1x eSATA (with flex module)</span></li>
+</ul></div></div><div specStructure='Ports'><h3>Rear Ports<a id='l3_RearPorts'></a></h3><div class='divFeatureValue'><ul><li><span>2x USB 2.0</span></li>
+<li><span>4x USB 3.2 Gen 1</span></li>
+<li><span>1x line-in (3.5mm)</span></li>
+<li><span>1x line-out (3.5mm)</span></li>
+<li><span>1x microphone (3.5mm)</span></li>
+<li><span>2x Ethernet (RJ-45)</span></li>
+<li><span>2x PS/2 ports (keyboard / mouse)</span></li>
+</ul></div></div><div specStructure='Ports'><h3>Optional Rear Ports<span class='optionalStar'>***</span><a id='l3_OptionalRearPorts'></a></h3><div class='divFeatureValue'><ul><li><span>2x USB-C&reg; 3.2 Gen 2 (support data transfer, via 2-port USB-C&reg; expansion card)</span></li>
+<li><span>1x Thunderbolt&trade; 3</span></li>
+<li><span>1x serial</span></li>
+</ul></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The transfer speed of following ports will vary and, depending on many factors, such as the processing speed of the host device, file attributes and other factors related to system configuration and your operating environment, will be slower than theoretical speed.
+USB 2.0: 480 Mbit/s;
+USB 3.2 Gen 1 (SuperSpeed USB 5Gbps, formerly USB 3.0 / USB 3.1 Gen 1): 5 Gbit/s;
+USB 3.2 Gen 2 (SuperSpeed USB 10Gbps, formerly USB 3.1 Gen 2): 10 Gbit/s;
+USB4&reg; 20Gbps / USB 3.2 Gen 2x2 (SuperSpeed USB 20Gbps): 20 Gbit/s;
+USB4&reg; 40Gbps (USB 40Gbps): 40 Gbit/s;
+Thunderbolt&trade; 3/4: 40 Gbit/s.
+Thunderbolt&trade; 5: 80 Gbit/s (bidirectional), up to 120 Gbit/s in bandwidth boost mode for video-intensive applications.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>StructureLevel2</strong></td></table></div>
+</div>
+<h1>Security & Privacy<a id='l1_SecurityPrivacy'></a></h1><div class='level1-content-container'><h2 specStructure='Security'>Security<a id='l2_Security'></a></h2><div specStructure='Security'><h3>Security Chip<a id='l3_SecurityChip'></a></h3><div class='divFeatureValue'><span>Discrete TPM 2.0, TCG certified, FIPS 140-2 certified</span></div></div><div specStructure='Security'><h3>Physical Locks<a id='l3_PhysicalLocks'></a></h3><div class='divFeatureValue'><ul><li><span>(Optional) Access panel lock kit with common key</span></li>
+<li><span>(Optional) Access panel lock kit with unique key</span></li>
+<li><span>Kensington&reg; Security Slot&trade;, 3 x 7 mm</span></li>
+</ul></div></div><div specStructure='Security'><h3>Chassis Intrusion Switch<a id='l3_ChassisIntrusionSwitch'></a></h3><div class='divFeatureValue'><span>Chassis intrusion switch</span></div></div><div specStructure='Security'><h3>BIOS Security<a id='l3_BIOSSecurity'></a></h3><div class='divFeatureValue'><ul><li><span>Administrator password</span></li>
+<li><span>Power-on password</span></li>
+</ul></div></div></div>
+<h1>Manageability<a id='l1_Manageability'></a></h1><div class='level1-content-container'><h2 specStructure='System Management'>System Management<a id='l2_SystemManagement'></a></h2><div specStructure='System Management'><h3>System Management<sup><span class='supText'>[1]</span></sup><a id='l3_SystemManagement'></a></h3><div class='divFeatureValue'><span>Intel&reg; vPro&reg; with Intel&reg; AMT 11</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>Intel&reg; vPro&reg; offers a superset of DASH’s defined capabilities.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>ProductLine Default</strong></td></table></div>
+<h2 specStructure='Diagnostic'>Diagnostic<a id='l2_Diagnostic'></a></h2><div specStructure='Diagnostic'><h3>Diagnostic<a id='l3_Diagnostic'></a></h3><div class='divFeatureValue'><ul><li><span>ThinkStation&reg; Diagnostics</span></li>
+<li><span>Photo-audio transfer with Lenovo&reg; PC Diagnostics for Android&trade; and iOS</span></li>
+<li><span>Front 4-digit diagnostic</span></li>
+<li><span>Lenovo&reg; UEFI Bootable Diagnostics</span></li>
+<li><span>None</span></li>
+</ul></div></div></div>
+<h1>Service<a id='l1_Service'></a></h1><div class='level1-content-container'><h2 specStructure='Warranty'>Warranty<sup><span class='supText'>[1]</span></sup><a id='l2_Warranty'></a></h2><div specStructure='Warranty'><h3>Base Warranty<span class='optionalStar'>**</span><a id='l3_BaseWarranty'></a></h3><div class='divFeatureValue'><ul><li><span>1-year limited onsite service</span></li>
+<li><span>3-year limited onsite service</span></li>
+</ul></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The warranty upgrades may be bundled with some models, please check the "Included upgrade" column in the specific model's configurations. For more service extensions, please go to <a href="https://smartfind.lenovo.com/" target="_blank"><u>https://smartfind.lenovo.com/</u></a>. To learn more details of warranty policy, please access  <a href="https://support.lenovo.com/warrantylookup/warrantypolicy" target="_blank"><u>https://support.lenovo.com/warrantylookup/warrantypolicy</u></a>.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>StructureLevel2</strong></td></table></div>
+</div>
+<h1>Operating Requirements<a id='l1_OperatingRequirements'></a></h1><div class='level1-content-container'><h2 specStructure='Operating Environment'>Operating Environment<a id='l2_OperatingEnvironment'></a></h2><div specStructure='Operating Environment'><h3>Temperature<a id='l3_Temperature'></a></h3><div class='divFeatureValue'><ul><li><span>Operating: 10°C (50°F) to 35°C (95°F)</span></li>
+<li><span>Storage: -40°C (-40°F) to 60°C (140°F)</span></li>
+</ul></div></div><div specStructure='Operating Environment'><h3>Altitude<a id='l3_Altitude'></a></h3><div class='divFeatureValue'><ul><li><span>Operating: 0 m (0 ft) to 3048 m (10,000 ft)</span></li>
+<li><span>Storage: 0 m (0 ft) to 12192 m (40,000 ft)</span></li>
+</ul></div></div><div specStructure='Operating Environment'><h3>Relative Humidity<a id='l3_RelativeHumidity'></a></h3><div class='divFeatureValue'><ul><li><span>Operating: 20% to 80%</span></li>
+<li><span>Storage: 10% to 90%</span></li>
+</ul></div></div></div>
+<h1>Certifications<a id='l1_Certifications'></a></h1><div class='level1-content-container'><h2 specStructure='Green Certifications'>Green Certifications<sup><span class='supText'>[1]</span></sup><a id='l2_GreenCertifications'></a></h2><div specStructure='Green Certifications'><h3>Green Certifications<a id='l3_GreenCertifications'></a></h3><div class='divFeatureValue'><ul><li><span>ENERGY STAR&reg; 8.0 (on model 30BA00EQUS)</span></li>
+<li><span>(Optional) ENERGY STAR&reg; 8.0</span></li>
+<li><span>EPEAT&trade; Silver Registered</span></li>
+<li><span>GREENGUARD&reg;</span></li>
+<li><span>RoHS compliant</span></li>
+</ul></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The items listed under the "Green Certifications" section may not only refer to certification but also registration or self-declaration. For ESG & regulatory compliance documents, please visit <a href="https://compliance.lenovo.com/" target="_blank"><u>https://compliance.lenovo.com</u></a>.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>StructureLevel2</strong></td></table></div>
+<h2 specStructure='ISV Certifications'>ISV Certifications<a id='l2_ISVCertifications'></a></h2><div specStructure='ISV Certifications'><h3>ISV Certifications<a id='l3_ISVCertifications'></a></h3><div class='divFeatureValue'><span>Please visit www.thinkworkstations.com/isv-certifications/</span></div></div></div>
+                    <div id="div_disclamor">
+                        <ul>
+                            <li>Feature with ** means that only one option listed under the feature can be configured on selected models. Please refer to the model configuration for specific information.</li><li>Feature with *** means that one or more options listed under the feature can be configured on selected models. Please refer to the model configuration for specific information.</li>
+                                    <li>Lenovo reserves the right to change specifications or other product information
+                                        without notice. Lenovo is not responsible for photographic or typographical
+                                        errors. LENOVO PROVIDES THIS PUBLICATION “AS IS,” WITHOUT WARRANTY OF ANY KIND,
+                                        EITHER EXPRESS OR IMPLIED, INCLUDING THE IMPLIED WARRANTIES OF MERCHANTABILITY
+                                        OR FITNESS FOR A PARTICULAR PURPOSE. Some jurisdictions do not allow disclaimer
+                                        of express or implied warranties in certain transactions, therefore this
+                                        disclaimer may not apply to you.</li>
+                                    <li>The specifications on this page may not be available in all regions, and may be
+                                        changed or updated without notice.</li>
+                        </ul>
+                    </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+    <script type="text/javascript">
+        $(function () {
+            $('.sidebar a').click(function () {
+                $('.sidebar a').removeClass('active');
+                $(this).addClass('active');
+                var href = $(this).attr('href');
+                var pos = $(href).offset().top + 250;
+                $("html,body", window.parent.document).eq(0).animate({ scrollTop: pos }, 1000);
+                return false;
+            });
+            $('.level1-content-container div div span').css('white-space', 'pre-line');
+            AutoSizeContainerWidth();
+            $.each($('.sidebar .level2-dt'), function (thisIndex, thisItem) {
+                if ($(thisItem).next().find('dt').length > 1) {
+                    $(thisItem).find('a').before('<div class="foldingiconDiv"><div class="foldingicon iconright"><svg t="1632474865024" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3667" width="16" height="16"><path d="M853.333333 480H544V170.666667c0-17.066667-14.933333-32-32-32s-32 14.933333-32 32v309.333333H170.666667c-17.066667 0-32 14.933333-32 32s14.933333 32 32 32h309.333333V853.333333c0 17.066667 14.933333 32 32 32s32-14.933333 32-32V544H853.333333c17.066667 0 32-14.933333 32-32s-14.933333-32-32-32z" p-id="3668"></path></svg></div><div class="foldingicon icondown iconHide"><svg t="1632474832777" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3471" width="16" height="16"><path d="M853.333333 544H170.666667c-17.066667 0-32-14.933333-32-32s14.933333-32 32-32h682.666666c17.066667 0 32 14.933333 32 32s-14.933333 32-32 32z" p-id="3472"></path></svg></div></div>');
+                } else {
+                    $(thisItem).next().remove();
+                    $(thisItem).find('a').css('margin-left', '0px');
+                }
+            });
+            $(".level2-nav-container").click(function () {
+                // 点击后子菜单展开其他菜单折叠
+                //$($menu).parent().parent().parent().not($(this)).find(".level2-dd").stop().slideUp(400);
+                $(this).find(".level2-dd").slideToggle(400);
+                $(this).find('.iconright').toggleClass('iconHide');
+                $(this).find('.icondown').toggleClass('iconHide');
+            });
+            $(".level2-nav-container .level2-dt a").click(function () {
+                // 点击后子菜单展开其他菜单折叠
+                //$($menu).parent().parent().parent().not($(this)).find(".level2-dd").stop().slideUp(400);
+                $(this).parent().siblings(".level2-dd").slideToggle(400);
+                $(this).prev().find('.iconright').toggleClass('iconHide');
+                $(this).prev().find('.icondown').toggleClass('iconHide');
+            });
+        });
+
+        $(window).resize(function () {
+            AutoSizeContainerWidth();
+        });
+
+        function AutoSizeContainerWidth() {
+            var windowWidth = $(window).width();
+            var containerWidth = windowWidth * 0.9;
+            $('.sidebar').css('cssText', 'max-width:' + containerWidth * 0.2 + 'px !important');
+            if (windowWidth * 0.2 > 249) {
+                $('.spec-content').css('cssText', 'max-width:' + containerWidth * 0.8 + 'px !important;margin-left: 260px;');
+            } else {
+                $('.spec-content').css('cssText', 'max-width:' + containerWidth * 0.8 + 'px !important;margin-left: ' + (containerWidth * 0.2 + 11) + 'px;');
+            }
+            $('#div_Container').css('cssText', 'max-width:' + containerWidth + 'px !important; margin:0 auto; ');
+        }
+    </script>
+</body>
+
+</html>

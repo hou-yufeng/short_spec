@@ -178,6 +178,26 @@ def feature_values(html_text: str) -> dict[str, list[str]]:
     return result
 
 
+def feature_groups_for_structure(html_text: str, structure_name: str) -> list[tuple[str, list[str]]]:
+    """Return ordered h3/value groups under one matching h2 specStructure section."""
+    headings = list(re.finditer(r"<h[12]\b[^>]*>.*?</h[12]>", html_text, flags=re.I | re.S))
+    target = feature_key(structure_name)
+    for index, heading in enumerate(headings):
+        opening = re.match(r"<h2\b([^>]*)>", heading.group(), flags=re.I)
+        if not opening:
+            continue
+        attrs = opening.group(1)
+        structure = re.search(r"\bspecstructure\s*=\s*(['\"])(.*?)\1", attrs, flags=re.I | re.S)
+        if not structure or feature_key(structure.group(2)) != target:
+            continue
+        end = headings[index + 1].start() if index + 1 < len(headings) else len(html_text)
+        parser = FeatureValueParser()
+        parser.feed(html_text[heading.end():end])
+        parser.close()
+        return parser.features
+    return []
+
+
 def values_for(features: dict[str, list[str]], name: str) -> list[str]:
     return features.get(feature_key(name), [])
 
@@ -185,9 +205,10 @@ def values_for(features: dict[str, list[str]], name: str) -> list[str]:
 class FeatureTableParser(HTMLParser):
     """Extract header-addressable rows from tables inside one HTML Spec feature."""
 
-    def __init__(self, feature_name: str) -> None:
+    def __init__(self, feature_name: str, preserve_linebreaks: bool = False) -> None:
         super().__init__(convert_charrefs=True)
         self.target = feature_key(feature_name)
+        self.preserve_linebreaks = preserve_linebreaks
         self.feature_depth = 0
         self.table_depth = 0
         self.row: list[tuple[str, bool]] | None = None
@@ -203,6 +224,9 @@ class FeatureTableParser(HTMLParser):
         if not self.feature_depth:
             if tag == "div" and attrs.get("specstructure") and feature_key(attrs["specstructure"]) == self.target:
                 self.feature_depth = 1
+            return
+        if tag == "br" and self.cell_depth and self.preserve_linebreaks:
+            self.cell_parts.append("\n")
             return
         self.feature_depth += 1
         if self.table_depth:
@@ -222,6 +246,12 @@ class FeatureTableParser(HTMLParser):
         elif tag == "span" and "supText" in class_tokens(attrs):
             self.suptext_depth = 1
 
+    def handle_startendtag(self, tag: str, attrs_list: list[tuple[str, str | None]]) -> None:
+        if tag.lower() == "br" and self.cell_depth and self.preserve_linebreaks:
+            self.cell_parts.append("\n")
+            return
+        super().handle_startendtag(tag, attrs_list)
+
     def handle_endtag(self, tag: str) -> None:
         if not self.feature_depth:
             return
@@ -231,7 +261,12 @@ class FeatureTableParser(HTMLParser):
         if self.cell_depth:
             self.cell_depth -= 1
             if self.cell_depth == 0 and self.row is not None:
-                value = " ".join(" ".join(self.cell_parts).split())
+                raw_value = " ".join(self.cell_parts)
+                value = (
+                    "\n".join(" ".join(line.split()) for line in raw_value.splitlines()).strip()
+                    if self.preserve_linebreaks
+                    else " ".join(raw_value.split())
+                )
                 self.row.append((value, self.cell_is_header))
         if self.table_depth and tag == "tr" and self.row is not None:
             self.rows.append(self.row)
@@ -242,14 +277,14 @@ class FeatureTableParser(HTMLParser):
 
     def handle_data(self, data: str) -> None:
         if self.cell_depth and not self.suptext_depth:
-            value = " ".join(data.split())
+            value = data.replace("\r\n", "\n").replace("\r", "\n") if self.preserve_linebreaks else " ".join(data.split())
             if value:
                 self.cell_parts.append(value)
 
 
-def feature_table_rows(html_text: str, feature_name: str) -> list[dict[str, str]]:
+def feature_table_rows(html_text: str, feature_name: str, preserve_linebreaks: bool = False) -> list[dict[str, str]]:
     """Return table rows keyed by their HTML Spec header labels, in source order."""
-    parser = FeatureTableParser(feature_name)
+    parser = FeatureTableParser(feature_name, preserve_linebreaks=preserve_linebreaks)
     parser.feed(html_text)
     parser.close()
     for index, row in enumerate(parser.rows):
@@ -264,51 +299,43 @@ def feature_table_rows(html_text: str, feature_name: str) -> list[dict[str, str]
     return []
 
 
-def feature_table_rows_for_heading(html_text: str, feature_name: str) -> list[dict[str, str]]:
+def feature_table_rows_for_heading(html_text: str, feature_name: str, preserve_linebreaks: bool = False) -> list[dict[str, str]]:
     """Return the first table directly associated with a matching h3 feature heading."""
     target = feature_key(feature_name)
     for match in re.finditer(r"<h3\b[^>]*>(.*?)</h3>", html_text, flags=re.I | re.S):
         if feature_key(match.group(1)) != target:
             continue
-        table = re.search(r"<table\b[^>]*>.*?</table>", html_text[match.end():], flags=re.I | re.S)
+        section = html_text[match.end():]
+        next_heading = re.search(r"<h[1-3]\b", section, flags=re.I)
+        if next_heading:
+            section = section[:next_heading.start()]
+        table = re.search(r"<table\b[^>]*>.*?</table>", section, flags=re.I | re.S)
         if not table:
             return []
         fragment = f'<div specstructure="{feature_name}">{table.group(0)}</div>'
-        return feature_table_rows(fragment, feature_name)
+        return feature_table_rows(fragment, feature_name, preserve_linebreaks=preserve_linebreaks)
     return []
 
 
-def dimensions_values(features: dict[str, list[str]], html_text: str | None) -> list[str]:
-    """Use the Dimensions column of a Dimensions (WxDxH) HTML table when present."""
-    if html_text:
-        rows = feature_table_rows_for_heading(html_text, "Dimensions (WxDxH)")
-        if rows:
-            return [row["dimensions"] for row in rows if row.get("dimensions")]
-    return values_for(features, "Dimensions (WxDxH)")
-
-
-def graphics_values(features: dict[str, list[str]], html_text: str | None, product_line: str) -> list[str]:
-    """Render Graphics according to product-line-specific third-batch HTML rules."""
-    if product_line == "tablet":
-        return values_for(features, "Graphics")
-    if product_line == "thinkstation":
-        return values_for(features, "Discrete Graphics Support")
-    if not html_text:
-        return []
-    result: list[str] = []
-    for row in feature_table_rows(html_text, "Graphics"):
-        graphics = row.get("graphics", "").strip()
-        graphics_type = row.get("type", "").strip().casefold()
-        memory = row.get("memory", "").strip()
-        if not graphics:
+def feature_values_for_heading_preserving_lines(html_text: str, feature_name: str) -> list[str]:
+    """Read a non-table feature value while retaining line breaks in its HTML text."""
+    target = feature_key(feature_name)
+    for match in re.finditer(
+        r"<h3\b[^>]*>(.*?)</h3>\s*<div\b[^>]*class=['\"][^'\"]*divFeatureValue[^'\"]*['\"][^>]*>(.*?)</div>",
+        html_text,
+        flags=re.I | re.S,
+    ):
+        heading_html, value_html = match.groups()
+        if feature_key(heading_html) != target or re.search(r"<table\b", value_html, flags=re.I):
             continue
-        if graphics_type == "discrete":
-            if memory and memory.casefold() not in graphics.casefold():
-                graphics = f"{graphics} {memory}"
-            result.append(f"{graphics} (discrete)")
-        elif graphics_type == "integrated":
-            result.append(f"{graphics} (integrated)")
-    return result
+        value_html = re.sub(r"<sup\b.*?</sup>", "", value_html, flags=re.I | re.S)
+        value_html = re.sub(r"<br\b[^>]*>", "\n", value_html, flags=re.I)
+        value_html = re.sub(r"</(?:li|p)\s*>", "\n", value_html, flags=re.I)
+        text = html.unescape(re.sub(r"<[^>]+>", "", value_html)).replace("\xa0", " ")
+        lines = [" ".join(line.split()) for line in text.splitlines()]
+        value = "\n".join(line for line in lines if line)
+        return [value] if "\n" in value else []
+    return []
 
 
 def remove_parentheses(value: str) -> str:
@@ -324,6 +351,85 @@ def positive_values(values: list[str]) -> tuple[list[str], bool]:
     return ([value for value in values if not value.lstrip().casefold().startswith("no")], no_present)
 
 
+def camera_short_spec(values: list[str], product_line: str) -> str:
+    """Render Camera entries according to the HTML product-line rules."""
+    if not values:
+        return ""
+    has_no = any(value.lstrip().casefold().startswith("no") for value in values)
+    if product_line == "tablet":
+        return "\n".join(value + "*" if has_no and not value.endswith("*") else value for value in values)
+
+    positive = [value for value in values if not value.lstrip().casefold().startswith("no")]
+    rendered: list[str] = []
+    for value in positive:
+        first, separator, rest = value.partition(",")
+        first = first.strip()
+        if product_line == "desktop":
+            detail = " RGB & IR hybrid" if re.search(r"\bIR\b", rest, re.I) else " RGB"
+            if "human presence detection" in rest.casefold():
+                detail += " with Human Presence Detection"
+            rendered.append(first + detail)
+            continue
+
+        parts = [first]
+        if separator:
+            keywords = ("human presence detection", "temporal noise reduction", "privacy shutter", "thinkshutter", "computer vision")
+            segments = [segment.strip() for segment in re.split(r"[,;]", rest)]
+            for segment in segments:
+                if any(keyword in segment.casefold() for keyword in keywords):
+                    parts.append(segment)
+            for segment in segments:
+                if not re.match(r"rear\b", segment, re.I):
+                    continue
+                rear = re.sub(r"\bworld facing\b", "", segment, flags=re.I)
+                rear = " ".join(rear.split()).strip()
+                if rear:
+                    parts.append(rear)
+        rendered.append(", ".join(parts))
+
+    distinct = unique_values(rendered)
+    return "\n".join(value + "*" if has_no and not value.endswith("*") else value for value in distinct)
+
+
+def audio_chip_term(value: str, multiple_conditions: bool) -> str | None:
+    """Keep an Audio Chip branch label when the feature has multiple branches."""
+    match = re.search(r"SoundWire|High Definition \(HD\) Audio", value, flags=re.I)
+    if not match:
+        return None
+    if multiple_conditions:
+        condition = re.match(r"\s*([^:]+):\s*", value)
+        if condition and condition.end() <= match.start():
+            return f"{condition.group(1).strip()}: {match.group(0)}"
+    return match.group(0)
+
+
+def audio_has_multiple_conditions(values: list[str]) -> bool:
+    return sum(bool(re.match(r"\s*[^:]+:\s*", value)) for value in values) > 1
+
+
+def non_tablet_battery_life(values: list[str]) -> str:
+    """Select the largest MobileMark version, then its longest stated runtime."""
+    mobilemark = re.compile(r"\bMobileMark\s*[®™]?\s*(\d+(?:\.\d+)?)?", re.I)
+    hours = re.compile(r"(\d+(?:\.\d+)?)\s*hr\b", re.I)
+    candidates: list[tuple[float, float]] = []
+    has_mobilemark = False
+    for value in values:
+        matches = list(mobilemark.finditer(value))
+        has_mobilemark |= bool(matches)
+        for index, match in enumerate(matches):
+            end = matches[index + 1].start() if index + 1 < len(matches) else len(value)
+            runtime = hours.search(value, match.end(), end)
+            if runtime:
+                version = float(match.group(1)) if match.group(1) else float("-inf")
+                candidates.append((version, float(runtime.group(1))))
+    if candidates:
+        return f"Up to {max(candidates)[1]:g} hr"
+    if has_mobilemark:
+        return ""
+    runtimes = [float(match.group(1)) for value in values for match in hours.finditer(value)]
+    return f"Up to {max(runtimes):g} hr" if runtimes else ""
+
+
 def finalize_short_spec(value: str) -> str:
     """Apply output-wide ShortSpec cleanup immediately before workbook writing."""
     value = re.sub(
@@ -332,7 +438,8 @@ def finalize_short_spec(value: str) -> str:
         value,
         flags=re.I | re.S,
     )
-    return html.unescape(value).replace("®", "").replace("™", "")
+    value = html.unescape(value)
+    return re.sub(r"\.(?=[ \t]*(?:\r?\n|$))", "", value)
 
 
 def unique_values(values: list[str]) -> list[str]:
@@ -344,67 +451,4 @@ def unique_values(values: list[str]) -> list[str]:
         if value and value.casefold() not in seen:
             seen.add(value.casefold())
             result.append(value)
-    return result
-
-
-def _touchpad_value(values: list[str]) -> str:
-    primary: list[str] = []
-    trailing: list[str] = []
-    for value in values:
-        value = re.sub(r"^\s*\d+\s*-\s*button\b\s*,?\s*", "", value, flags=re.I)
-        value = re.sub(r"\bpointing device\b", "", value, flags=re.I)
-        value = re.sub(r"\s*,?\s*double-tap to open the TrackPoint Quick Menu", "", value, flags=re.I)
-        parts = [part.strip() for part in value.split(",")]
-        value = ", ".join(part for part in parts if part and not part.casefold().startswith("supports"))
-        value = re.sub(r"\s+,", ",", value).strip(" ,.")
-        if not value:
-            continue
-        if "," in value:
-            head, tail = value.rsplit(",", 1)
-            primary.append(head.strip(" ,."))
-            trailing.append(tail.strip(" ,."))
-        else:
-            primary.append(value)
-    lines = [" or ".join(unique_values(primary))]
-    if trailing:
-        lines.append(" or ".join(unique_values(trailing)))
-    return "\n".join(line for line in lines if line)
-
-
-def additional_third_batch_values(features: dict[str, list[str]], product_line: str) -> list[tuple[str, str]]:
-    """Return the five additive third-batch rules applicable to a product line."""
-    result: list[tuple[str, str]] = []
-    if product_line != "tablet":
-        chipset = values_for(features, "Chipset")
-        if chipset and not all("soc" in value.casefold() for value in chipset):
-            result.append(("Chipset", "\n".join(unique_values(chipset))))
-    if product_line == "consumer_laptop":
-        controls = unique_values(values_for(features, "Controls"))
-        if controls:
-            result.append(("Controls", "\n".join(controls)))
-    if product_line in {"commercial_laptop", "consumer_laptop", "smb_laptop"}:
-        docking = values_for(features, "Docking")
-        folio = "Chromebook folio keyboard with touchpad (Pogo pin, detachable)"
-        no_keyboard = "No keyboard docking inbox"
-        if any(value.casefold() == folio.casefold() for value in docking) and any(value.casefold() == no_keyboard.casefold() for value in docking):
-            result.append(("Docking", folio + "*"))
-        else:
-            cleaned = []
-            for value in docking:
-                if value.casefold().startswith("for more compatible"):
-                    continue
-                value = re.sub(r"^Various docking", "Docking", value, flags=re.I)
-                cleaned.append(value)
-            cleaned = unique_values(cleaned)
-            if cleaned:
-                result.append(("Docking", "\n".join(cleaned)))
-    if product_line in {"commercial_laptop", "consumer_laptop", "smb_laptop", "tablet"}:
-        multi_mode = values_for(features, "Multi-mode")
-        if multi_mode and not all(value.lstrip().casefold().startswith("no") for value in multi_mode):
-            result.append(("Multi-mode", "\n".join(unique_values([value.split(":", 1)[0] for value in multi_mode]))))
-    if product_line in {"commercial_laptop", "consumer_laptop", "smb_laptop"}:
-        source = "UltraNav" if product_line == "commercial_laptop" else "Touchpad"
-        touchpad = _touchpad_value(values_for(features, source))
-        if touchpad:
-            result.append(("Touchpad", touchpad))
     return result

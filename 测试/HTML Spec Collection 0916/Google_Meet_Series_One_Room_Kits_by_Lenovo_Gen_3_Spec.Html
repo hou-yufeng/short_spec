@@ -1,0 +1,635 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="/FrameworkFiles/iframeResizer/iframeResizer.contentWindow.min.js"></script>
+    <script src="/FrameworkFiles/jquery-2.1.1.min.js"></script>
+    <style>
+        @font-face {
+            font-family: "Gotham-Book";
+            src: url('/Resource/Font/Gotham-Book.otf');
+        }
+
+        * {
+            color: #646363;
+            padding: 0;
+            margin: 0;
+            font-size: 14px;
+            font-family: "Gotham-Book" !important;
+        }
+
+        h1 {
+            color: #E1251B;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .level1-content-container {
+            margin-bottom: 50px;
+        }
+
+        .level2-dd {
+            display: none;
+        }
+
+        h2 {
+            color: #294E95;
+            margin-top: 25px;
+            font-size: 18px;
+        }
+
+        h3 {
+            padding-top: 10px;
+            padding-bottom: 5px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .level1-dt a {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .level2-dt {
+            line-height: 23px;
+            vertical-align: central;
+        }
+
+        .level2-dt a {
+            margin-left: -15px;
+        }
+
+        .level3-dt a {}
+
+        a:hover {
+            color: #294E95;
+            text-decoration: underline;
+        }
+
+        .active {
+            color: #294E95;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .level2-nav-container {
+            padding-left: 15px;
+            cursor: pointer;
+        }
+
+
+        .level3-nav-container {
+            padding-left: 15px;
+        }
+
+        dt,
+        dd {
+            padding: 3px 5px;
+        }
+
+        .fn-content-table {
+            border: 1px solid #808080;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .fn-content-table td {
+            border: 1px solid #808080;
+            padding: 10px 5px;
+            white-space: pre-line !important;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+        .sidebar {
+            float: left;
+            width: 249px;
+            overflow-y: scroll;
+            height: 100%;
+            position: fixed;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            /*对垂直流动条有效*/
+            height: 5px;
+            /*对水平流动条有效*/
+        }
+
+        /*定义滚动条的轨道颜色、内阴影及圆角*/
+        ::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, .3);
+            background-color: mintcream;
+            border-radius: 3px;
+        }
+
+
+        /*定义滑块颜色、内阴影及圆角*/
+        ::-webkit-scrollbar-thumb {
+            border-radius: 7px;
+            -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, .3);
+            background-color: #e8e5e5;
+        }
+
+        /*定义两端按钮的样式*/
+        ::-webkit-scrollbar-button {
+            background-color: none;
+        }
+
+        /*定义右下角汇合处的样式*/
+        ::-webkit-scrollbar-corner {
+            background: khaki;
+        }
+
+        .spec-content {
+            float: left;
+            margin-left: 260px;
+        }
+
+        .fn-header {
+            padding: 5px;
+            white-space: nowrap;
+        }
+
+        .fn-content {
+            padding: 5px;
+        }
+
+        .attr-header {
+            text-align: center;
+            background-color: #e8e5e5;
+        }
+
+        .titleProductName {
+            max-height: 20px;
+            background-color: white;
+            width: 100%;
+            text-align: left;
+            font-size: 20px;
+            box-shadow: 0px 10px 10px -10px #000000;
+            padding: 10px;
+            position: fixed;
+            top: 0px;
+            font-weight: 600;
+            padding-left: 30px;
+        }
+
+        .divFeatureValue ul {
+            list-style: outside;
+            padding-left: 20px;
+        }
+
+        .divFeatureValue {
+            max-width: 100%;
+        }
+
+        .noteTitle {
+            font-size: 11px;
+        }
+
+        .noteContent {
+            margin-top: 3px;
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        .noteContent ul {
+            list-style: decimal !important;
+            padding-left: 20px;
+        }
+
+        .noteContent ul li,
+        .noteContent ul li span,
+        .noteContent ul li span a,
+        .noteContent ul li span a u {
+            font-size: 8pt !important;
+        }
+
+        .NoteHR {
+            BORDER-BOTTOM-STYLE: none;
+            BORDER-LEFT-STYLE: none;
+            BORDER-RIGHT-STYLE: none;
+            BORDER-TOP-STYLE: dotted;
+            width: 12%;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            height: 1px;
+            border-top: 2px dotted #808080;
+        }
+
+        .menuhighlight {
+            background-color: #E0FFFF !important;
+        }
+
+        .supText {
+            font-size: 0.6em;
+            color: #294E95;
+        }
+
+        .optionalStar {
+            color: #294E95;
+        }
+
+        .imagePanel {
+            /*height: 400px;*/
+            max-width: 95%;
+            margin: 0px auto;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .imagePanel img {
+            margin: 10px auto;
+            width: auto;
+            height: auto;
+            max-height: 100%;
+            max-width: 100%;
+        }
+
+        .overviewTextPanel {
+            margin: 50px auto 20px auto;
+            width: 100%;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .overviewTextPanel table {
+            margin: 0px auto;
+            border: 1px solid #808080;
+            border-collapse: collapse;
+        }
+
+        .overviewTextPanel table td {
+            font-size: 9pt;
+            text-align: left;
+            /*padding: 4px 10px;*/
+            /*width: 50%;*/
+            /*border: 0.5px solid gray;*/
+        }
+
+        .overviewTextPanel table td.overview_sortnumber {
+            width: 22px !important;
+            padding-left: 8px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+            border-top: 1px solid gray;
+            border-left: 1px solid gray;
+            border-bottom: 1px solid gray;
+        }
+
+        .overviewTextPanel table td.overview_text {
+            width: 335px !important;
+            border-top: 1px solid gray;
+            border-right: 1px solid gray;
+            border-bottom: 1px solid gray;
+            padding-right: 10px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+
+        .overviewNotePanel {
+            margin: auto;
+            padding: 10px;
+            font-style: italic;
+        }
+
+        .overviewNotePanel ul {
+            list-style-type: decimal;
+            list-style-position: inside;
+        }
+
+        .overviewNotePanel ul li {
+            white-space: pre-line;
+            font-size: 8pt !important;
+            white-space: pre-line;
+            margin-bottom: 3px;
+        }
+
+        .foldingiconDiv {
+            left: -20px;
+            top: 2px;
+            text-align: left;
+            display: inline;
+            position: relative;
+            vertical-align: central;
+        }
+
+        .foldingicon {
+            display: inline;
+        }
+
+        .foldingicon span svg {
+            top: 50%;
+            margin-top: -8px;
+        }
+
+        .iconHide {
+            display: none;
+        }
+
+        #div_disclamor {
+            margin-bottom: 0px;
+            /*white-space: pre-line;*/
+            margin-right: 50px;
+        }
+
+        #div_disclamor ul {
+            list-style-position: outside;
+            list-style-type: disc;
+            margin-left: 20px;
+            line-height: 20px;
+        }
+
+        #div_disclamor ul li {
+            /*margin-top: 10px;*/
+        }
+
+        .note_number {
+            color: #294E95;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="titleHead">
+        <div class="titleProductName">
+            Google Meet Series One Room Kits by Lenovo Gen 3
+                <span style="margin-left:20%;">Last Modify Time: 2025-11-25 10:51:48</span>
+        </div>
+    </div>
+    <div style="width:100% !important;height:50px;" class="spaceDiv"></div>
+    <div id="div_Container">
+        <div class="sidebar">
+            <dl class='level1-nav-container'>
+<dt class='level1-dt'><a id='nav_l1_Overview'  href='#l1_Overview'>Overview</a></dt><dd class='level1-dd'></dd><dt class='level1-dt'><a id='nav_l1_Performance' href='#l1_Performance'>Performance</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_ComputeUnit' href='#l2_ComputeUnit'>Compute Unit</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_ComputeUnit' href='#l3_ComputeUnit'>Compute Unit</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Design' href='#l1_Design'>Design</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Mechanical' href='#l2_Mechanical'>Mechanical</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_ComponentOptions' href='#l3_ComponentOptions'>Component Options</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Controller' href='#l2_Controller'>Controller</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_TouchController' href='#l3_TouchController'>Touch Controller</a></dt><dt class='level3-dt'><a id='nav_l3_RemoteControl' href='#l3_RemoteControl'>Remote Control</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_AudioBar' href='#l2_AudioBar'>Audio Bar</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_SmartAudioBar' href='#l3_SmartAudioBar'>Smart Audio Bar</a></dt><dt class='level3-dt'><a id='nav_l3_AddonAudioBar' href='#l3_AddonAudioBar'>Add-on Audio Bar</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Microphone' href='#l2_Microphone'>Microphone</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_MicPod' href='#l3_MicPod'>Mic Pod</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Camera' href='#l2_Camera'>Camera</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_SmartCamera' href='#l3_SmartCamera'>Smart Camera</a></dt><dt class='level3-dt'><a id='nav_l3_SmartCameraXL' href='#l3_SmartCameraXL'>Smart Camera XL</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Service' href='#l1_Service'>Service</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Warranty' href='#l2_Warranty'>Warranty</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_BaseWarranty' href='#l3_BaseWarranty'>Base Warranty</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Software' href='#l1_Software'>Software</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_PreinstalledSoftware' href='#l2_PreinstalledSoftware'>Preinstalled Software</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_PreinstalledSoftware' href='#l3_PreinstalledSoftware'>Preinstalled Software</a></dt></dl></dd></dl>
+</dd>
+</dl>
+        </div>
+        <div class="spec-content">
+            <h1>Overview<a id='l1_Overview'></a></h1><div class='level1-content-container'><div class='imagePanel'><img src='/syspool/Sys/PDF\Lenovo\Google_Meet_Series_One_Room_Kits_by_Lenovo_Gen_3\Google_Meet_Series_One_Room_Kits_by_Lenovo_Gen_3_OverViewPic.jpg' /></div><div class='overviewTextPanel'><table cellpadding='0' cellspacing='0'><tbody><tr><td class='overview_sortnumber'>1.</td><td class='overview_text'>USB-C (USB 10Gbps)</td><td class='overview_sortnumber'>9.</td><td class='overview_text'>Ethernet (RJ-45)</td></tr><tr><td class='overview_sortnumber'>2.</td><td class='overview_text'>USB-C (Thunderbolt 4 )</td><td class='overview_sortnumber'>10.</td><td class='overview_text'>Kensington Security Slot</td></tr><tr><td class='overview_sortnumber'>3.</td><td class='overview_text'>HDMI-in 1.4</td><td class='overview_sortnumber'>11.</td><td class='overview_text'>Ethernet (15W POE, for touch controller)</td></tr><tr><td class='overview_sortnumber'>4.</td><td class='overview_text'>HDMI-out 2.1 TMDS</td><td class='overview_sortnumber'>12.</td><td class='overview_text'>Ethernet (15W POE, for camera)</td></tr><tr><td class='overview_sortnumber'>5.</td><td class='overview_text'>HDMI-out 2.1 TMDS</td><td class='overview_sortnumber'>13.</td><td class='overview_text'>Ethernet (15W POE)</td></tr><tr><td class='overview_sortnumber'>6.</td><td class='overview_text'>USB-C (USB 10Gbps)</td><td class='overview_sortnumber'>14.</td><td class='overview_text'>Ethernet (100W POE, for smart audio bar)</td></tr><tr><td class='overview_sortnumber'>7.</td><td class='overview_text'>USB-A (USB 10Gbps), for remote in small room</td><td class='overview_sortnumber'>15.</td><td class='overview_text'>DC-in (AC adapter input)</td></tr><tr><td class='overview_sortnumber'>8.</td><td class='overview_text'>USB-A (USB 10Gbps)</td><td class='overview_sortnumber'></td><td class='overview_text'></td></tr></tr></tbody></table></div><div class='overviewNotePanel'></div></div>
+                <h1>Performance<a id='l1_Performance'></a></h1><div class='level1-content-container'><h2 specStructure='Compute Unit'>Compute Unit<a id='l2_ComputeUnit'></a></h2><div specStructure='Compute Unit'><h3>Compute Unit<a id='l3_ComputeUnit'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Features</td><td class='attr-header'>Information</td></tr>
+<tr>
+<td>Processor</td><td>Intel&reg; Core&trade; i5-1335U, 10C (2P + 8E) / 12T, P-core 1.3 / 4.6GHz, E-core 0.9 / 3.4GHz, 12MB Cache</td></tr>
+<tr>
+<td>Operating System</td><td>ChromeOS</td></tr>
+<tr>
+<td>Graphics</td><td>Integrated Intel&reg; Iris&reg; Xe Graphics. Max Resolution: 4096x2304@60Hz(HDMI&reg;), 4096x2304@60Hz(USB-C&reg;), 4096x2304@60Hz(Thunderbolt&trade;)</td></tr>
+<tr>
+<td>Chipset</td><td>Intel&reg; SoC (System on Chip) platform</td></tr>
+<tr>
+<td>Memory</td><td>Up to 32GB DDR5-5600</td></tr>
+<tr>
+<td>Storage</td><td>One drive, 256GB SSD M.2 2280 PCIe&reg; 4.0x4 NVMe&reg; Opal</td></tr>
+<tr>
+<td>Audio Chip</td><td>High Definition (HD) Audio, Realtek&reg; ALC5682I codec</td></tr>
+<tr>
+<td>Power Supply</td><td>240W adapter, 100V - 240V</td></tr>
+<tr>
+<td>Ethernet</td><td>Gigabit ethernet, Realtek&reg; RTL8111G (1x RJ-45, uplink) and Intel&reg; Ethernet Controller I350 (4x RJ-45, downlink)</td></tr>
+<tr>
+<td>WLAN + Bluetooth&reg;</td><td>Intel&reg; Wi-Fi&reg; 6E AX211, 802.11ax 2x2 Wi-Fi&reg; + Bluetooth&reg; 5.2, M.2 Card</td></tr>
+<tr>
+<td>Case Color</td><td>Charcoal</td></tr>
+<tr>
+<td>Rear Ports</td><td>• 1x USB-C&reg; (USB 10Gbps / 3.2 Gen 2), with data transfer and DisplayPort&trade;
+• 1x USB-C&reg; (Thunderbolt&trade; 4), with data transfer and DisplayPort&trade;
+• 1x USB-C&reg; (USB 10Gbps / 3.2 Gen 2), data transfer only 
+• 2x HDMI&reg;-out 2.1 TMDS with CEC
+• 2x USB-A (USB 10Gbps / USB 3.2 Gen 2)
+• 1x HDMI&reg;-in 1.4b
+• 1x power connector
+• 5x RJ-45 Ethernet (one uplink port for internet connection, four downlink ports for IP-based peripherals)</td></tr>
+<tr>
+<td>Dimension (WxDxH)</td><td>284 x 135 x 29 mm (11.18 x 5.31 x 1.14 inches)</td></tr>
+<tr>
+<td>Weight</td><td>985 g (2.17 lbs)</td></tr>
+</table></div></div></div>
+<h1>Design<a id='l1_Design'></a></h1><div class='level1-content-container'><h2 specStructure='Mechanical'>Mechanical<a id='l2_Mechanical'></a></h2><div specStructure='Mechanical'><h3>Component Options<span class='optionalStar'>**</span><a id='l3_ComponentOptions'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Product</td><td class='attr-header'>Compute System</td><td class='attr-header'>Controller</td><td class='attr-header'>Audio Bar</td><td class='attr-header'>Microphone Component</td><td class='attr-header'>Camera Component</td></tr>
+<tr>
+<td>Remote Kit</td><td>1x Compute Unit</td><td>1x Remote Controller</td><td>-</td><td>-</td><td>-</td></tr>
+<tr>
+<td>Large Room Kit</td><td>1x Compute Unit</td><td>1x Touch Controller</td><td>1x Smart Audio Bar + 1x Add-on Audio Bar</td><td>2x Mic Pod</td><td>1x Smart Camera XL</td></tr>
+<tr>
+<td>Medium Room Prime Kit</td><td>1x Compute Unit</td><td>1x Touch Controller</td><td>1x Smart Audio Bar</td><td>1x Mic Pod</td><td>1x Smart Camera XL</td></tr>
+<tr>
+<td>Medium Room Kit</td><td>1x Compute Unit</td><td>1x Touch Controller</td><td>1x Smart Audio Bar</td><td>1x Mic Pod</td><td>1x Smart Camera</td></tr>
+<tr>
+<td>Medium Room Lite Kit</td><td>1x Compute Unit</td><td>1x Touch Controller</td><td>1x Smart Audio Bar</td><td>-</td><td>1x Smart Camera</td></tr>
+<tr>
+<td>Small Room Kit</td><td>1x Compute Unit</td><td>1x Remote Controller</td><td>1x Smart Audio Bar</td><td>-</td><td>1x Smart Camera</td></tr>
+<tr>
+<td>Touch Kit</td><td>1x Compute Unit</td><td>1x Touch Controller</td><td>-</td><td>-</td><td>-</td></tr>
+<tr>
+<td>Compute Unit Only</td><td>1x Compute Unit</td><td>-</td><td>-</td><td>-</td><td>-</td></tr>
+</table></div></div><h2 specStructure='Controller'>Controller<a id='l2_Controller'></a></h2><div specStructure='Controller'><h3>Touch Controller<a id='l3_TouchController'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Features</td><td class='attr-header'>Information</td></tr>
+<tr>
+<td>Display</td><td>• 10.1" Display, 1280x800(HD)x3(RGB) LCD, 16:9 aspect ratio
+• multi-touch touch
+• Anti-glare, Anti Smudge</td></tr>
+<tr>
+<td>Sensors</td><td>• Color sensor
+• Orientation sensor</td></tr>
+<tr>
+<td>Ports</td><td>1x RJ45 Ethernet (PoE, connect to Compute System)</td></tr>
+<tr>
+<td>Dimension</td><td>245 x 164 x 91 mm (9.65 x 6.46 x 3.58 inches)</td></tr>
+<tr>
+<td>Weight</td><td>990 g (2.18 lbs)</td></tr>
+</table></div></div><div specStructure='Controller'><h3>Remote Control<a id='l3_RemoteControl'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Features</td><td class='attr-header'>Information</td></tr>
+<tr>
+<td>Keypad</td><td>• 10 function keys on front (Navi keys, Microphone on/off, Menu, End, Volume up/
+down keys)
+• QWERTY keyboard on rear (38 keys)</td></tr>
+<tr>
+<td>Connections</td><td>2.4 RF remote</td></tr>
+<tr>
+<td>Power supply</td><td>Embedded rechargeable lithium ion battery with USB-powered charging dock</td></tr>
+<tr>
+<td>Dimension</td><td>45 x 130 x 14 mm (1.77 x 5.12 x 0.55 inches)</td></tr>
+<tr>
+<td>Weight</td><td>65 g (0.14 lbs)</td></tr>
+</table></div></div><h2 specStructure='Audio Bar'>Audio Bar<a id='l2_AudioBar'></a></h2><div specStructure='Audio Bar'><h3>Smart Audio Bar<a id='l3_SmartAudioBar'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Features</td><td class='attr-header'>Information</td></tr>
+<tr>
+<td>Speakers</td><td>• 2.5 inch neodymium woofer, 1 inch neodymium tweeter
+• 2x passive radiators
+• 20W RMS power, 80Hz-24kHz frequency response</td></tr>
+<tr>
+<td>Microphone</td><td>• 8 element, linear beamforming array
+• 100Hz-24kHz pickup, optimal pickup range of up to 4m</td></tr>
+<tr>
+<td>Ports</td><td>• 1x USB-C&reg; with USB 2.0 UAC (only for audio out)
+• 1x stereo analog RCA output (for assistive listening devices)
+• 1x RJ-45 Ethernet (PoE, connect to Compute System)
+• 2x RJ-45 Daisy Chain Ports (PoE like, connect to Add-on Audio Bar and Mic Pod)</td></tr>
+<tr>
+<td>Dimension</td><td>705 x 95 x 133 mm (27.76 x 3.74 x 5.24 inches)</td></tr>
+<tr>
+<td>Weight</td><td>3.3 kg (7.28 lbs)</td></tr>
+</table></div></div><div specStructure='Audio Bar'><h3>Add-on Audio Bar<a id='l3_AddonAudioBar'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Features</td><td class='attr-header'>Information</td></tr>
+<tr>
+<td>Speakers</td><td>• 2.5 inch neodymium woofer, 1 inch neodymium tweeter
+• 2x passive radiators
+• 20W RMS power, 80Hz-24kHz frequency response</td></tr>
+<tr>
+<td>Microphone</td><td>• 8 element, linear beamforming array
+• 100Hz-24kHz pickup, optimal pickup range of up to 4m</td></tr>
+<tr>
+<td>Ports</td><td>1x RJ-45 Daisy Chain Port (PoE like, connect to Smart Audio Bar)</td></tr>
+<tr>
+<td>Dimension</td><td>705 x 95 x 133 mm (27.76 x 3.74 x 5.24 inches)</td></tr>
+<tr>
+<td>Weight</td><td>2.8 kg (6.17 lbs)</td></tr>
+</table></div></div><h2 specStructure='Microphone'>Microphone<a id='l2_Microphone'></a></h2><div specStructure='Microphone'><h3>Mic Pod<a id='l3_MicPod'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Features</td><td class='attr-header'>Information</td></tr>
+<tr>
+<td>Capturing Range</td><td>• 100Hz-24kHz pickup
+• Optimal pickup range of up to 2m</td></tr>
+<tr>
+<td>Key Features</td><td>8 element, circular beamforming array</td></tr>
+<tr>
+<td>Ports</td><td>2x RJ-45 Daisy Chain ports (PoE like, one input connects to Smart Audio Bar or previous Mic Pod, one output port connects to next Mic Pod)</td></tr>
+<tr>
+<td>Dimension</td><td>95 x 95 x 30 mm (3.74 x 3.74 x 1.18 inches)</td></tr>
+<tr>
+<td>Weight</td><td>215 g (0.47 lbs)</td></tr>
+</table></div></div><h2 specStructure='Camera'>Camera<a id='l2_Camera'></a></h2><div specStructure='Camera'><h3>Smart Camera<a id='l3_SmartCamera'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Features</td><td class='attr-header'>Information</td></tr>
+<tr>
+<td>Image</td><td>• Up to 1080p@30fps video capture, f/2.8 aperture
+• 12 MP 1/2.3" CMOS sensor
+• 16:9 aspect ratio output</td></tr>
+<tr>
+<td>Optics</td><td>• Ultra-wide angle glass optics
+• 120˚ horizontal field of view
+• 90˚ vertical field of view</td></tr>
+<tr>
+<td>Microphone</td><td>Omnidirectional microphone</td></tr>
+<tr>
+<td>Mounting</td><td>Wall mount kit, TV mount kit, Magnetic dock</td></tr>
+<tr>
+<td>Ports</td><td>1x RJ-45 Ethernet (PoE, connect to Compute System)</td></tr>
+<tr>
+<td>Dimension</td><td>107 x 84 x 42 mm (4.21 x 3.3 x 1.65 inches)</td></tr>
+<tr>
+<td>Weight</td><td>321 g (0.71)</td></tr>
+</table></div></div><div specStructure='Camera'><h3>Smart Camera XL<a id='l3_SmartCameraXL'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Features</td><td class='attr-header'>Information</td></tr>
+<tr>
+<td>Image</td><td>• Up to 1080p@30fps video capture, f/2.9 aperture
+• 20.30 MP 1" CMOS sensor
+• 16:9 aspect ratio output</td></tr>
+<tr>
+<td>Optics</td><td>• Wide angle glass optics
+• 90˚- 95˚ horizontal field of view
+• 90˚ vertical field of view</td></tr>
+<tr>
+<td>Microphone</td><td>Omnidirectional microphone</td></tr>
+<tr>
+<td>Mounting</td><td>Wall mount kit, TV mount kit, Magnetic dock</td></tr>
+<tr>
+<td>Ports</td><td>1x RJ-45 Ethernet (PoE, connect to Compute System)</td></tr>
+<tr>
+<td>Dimension</td><td>122 x 84 x 52 mm (4.8 x 3.3 x 2.04 inches)</td></tr>
+<tr>
+<td>Weight</td><td>480 g (1.06 lbs)</td></tr>
+</table></div></div></div>
+<h1>Service<a id='l1_Service'></a></h1><div class='level1-content-container'><h2 specStructure='Warranty'>Warranty<sup><span class='supText'>[1]</span></sup><a id='l2_Warranty'></a></h2><div specStructure='Warranty'><h3>Base Warranty<a id='l3_BaseWarranty'></a></h3><div class='divFeatureValue'><span>3-year Premier Support service</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The warranty upgrades may be bundled with some models, please check the "Included upgrade" column in the specific model's configurations. For more service extensions, please go to <a href="https://smartfind.lenovo.com/" target="_blank"><u>https://smartfind.lenovo.com/</u></a>. To learn more details of warranty policy, please access  <a href="https://support.lenovo.com/warrantylookup/warrantypolicy" target="_blank"><u>https://support.lenovo.com/warrantylookup/warrantypolicy</u></a>.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>StructureLevel2</strong></td></table></div>
+</div>
+<h1>Software<a id='l1_Software'></a></h1><div class='level1-content-container'><h2 specStructure='Preinstalled Software'>Preinstalled Software<a id='l2_PreinstalledSoftware'></a></h2><div specStructure='Preinstalled Software'><h3>Preinstalled Software<a id='l3_PreinstalledSoftware'></a></h3><div class='divFeatureValue'><span>Google Meet</span></div></div></div>
+                    <div id="div_disclamor">
+                        <ul>
+                            <li>This is a telepresence technology product.</li><li>Feature with ** means that only one option listed under the feature can be configured on selected models. Please refer to the model configuration for specific information.</li>
+                                    <li>Lenovo reserves the right to change specifications or other product information
+                                        without notice. Lenovo is not responsible for photographic or typographical
+                                        errors. LENOVO PROVIDES THIS PUBLICATION “AS IS,” WITHOUT WARRANTY OF ANY KIND,
+                                        EITHER EXPRESS OR IMPLIED, INCLUDING THE IMPLIED WARRANTIES OF MERCHANTABILITY
+                                        OR FITNESS FOR A PARTICULAR PURPOSE. Some jurisdictions do not allow disclaimer
+                                        of express or implied warranties in certain transactions, therefore this
+                                        disclaimer may not apply to you.</li>
+                                    <li>The specifications on this page may not be available in all regions, and may be
+                                        changed or updated without notice.</li>
+                        </ul>
+                    </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+    <script type="text/javascript">
+        $(function () {
+            $('.sidebar a').click(function () {
+                $('.sidebar a').removeClass('active');
+                $(this).addClass('active');
+                var href = $(this).attr('href');
+                var pos = $(href).offset().top + 250;
+                $("html,body", window.parent.document).eq(0).animate({ scrollTop: pos }, 1000);
+                return false;
+            });
+            $('.level1-content-container div div span').css('white-space', 'pre-line');
+            AutoSizeContainerWidth();
+            $.each($('.sidebar .level2-dt'), function (thisIndex, thisItem) {
+                if ($(thisItem).next().find('dt').length > 1) {
+                    $(thisItem).find('a').before('<div class="foldingiconDiv"><div class="foldingicon iconright"><svg t="1632474865024" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3667" width="16" height="16"><path d="M853.333333 480H544V170.666667c0-17.066667-14.933333-32-32-32s-32 14.933333-32 32v309.333333H170.666667c-17.066667 0-32 14.933333-32 32s14.933333 32 32 32h309.333333V853.333333c0 17.066667 14.933333 32 32 32s32-14.933333 32-32V544H853.333333c17.066667 0 32-14.933333 32-32s-14.933333-32-32-32z" p-id="3668"></path></svg></div><div class="foldingicon icondown iconHide"><svg t="1632474832777" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3471" width="16" height="16"><path d="M853.333333 544H170.666667c-17.066667 0-32-14.933333-32-32s14.933333-32 32-32h682.666666c17.066667 0 32 14.933333 32 32s-14.933333 32-32 32z" p-id="3472"></path></svg></div></div>');
+                } else {
+                    $(thisItem).next().remove();
+                    $(thisItem).find('a').css('margin-left', '0px');
+                }
+            });
+            $(".level2-nav-container").click(function () {
+                // 点击后子菜单展开其他菜单折叠
+                //$($menu).parent().parent().parent().not($(this)).find(".level2-dd").stop().slideUp(400);
+                $(this).find(".level2-dd").slideToggle(400);
+                $(this).find('.iconright').toggleClass('iconHide');
+                $(this).find('.icondown').toggleClass('iconHide');
+            });
+            $(".level2-nav-container .level2-dt a").click(function () {
+                // 点击后子菜单展开其他菜单折叠
+                //$($menu).parent().parent().parent().not($(this)).find(".level2-dd").stop().slideUp(400);
+                $(this).parent().siblings(".level2-dd").slideToggle(400);
+                $(this).prev().find('.iconright').toggleClass('iconHide');
+                $(this).prev().find('.icondown').toggleClass('iconHide');
+            });
+        });
+
+        $(window).resize(function () {
+            AutoSizeContainerWidth();
+        });
+
+        function AutoSizeContainerWidth() {
+            var windowWidth = $(window).width();
+            var containerWidth = windowWidth * 0.9;
+            $('.sidebar').css('cssText', 'max-width:' + containerWidth * 0.2 + 'px !important');
+            if (windowWidth * 0.2 > 249) {
+                $('.spec-content').css('cssText', 'max-width:' + containerWidth * 0.8 + 'px !important;margin-left: 260px;');
+            } else {
+                $('.spec-content').css('cssText', 'max-width:' + containerWidth * 0.8 + 'px !important;margin-left: ' + (containerWidth * 0.2 + 11) + 'px;');
+            }
+            $('#div_Container').css('cssText', 'max-width:' + containerWidth + 'px !important; margin:0 auto; ');
+        }
+    </script>
+</body>
+
+</html>

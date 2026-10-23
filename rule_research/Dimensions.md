@@ -1,4 +1,14 @@
 1. 所有产品线都需要Dimensions (WxDxH)简短规格, 除非HTML Spec没有Dimensions (WxDxH).
-2. 读取HTML Spec的Dimensions (WxDxH)信息, 源信息以HTML表格形式呈现.
-3. 当HTML表格的数据仅包含一行数据, 且数据Models字段仅有"All models", 则直接读取表格的Dimensions字段信息并作为Dimensions (WxDxH)的简短规格信息.
-4. 当HTML表格的数据包含一行或多行数据, 且数据Models字段没有"All models", 则Dimensions (WxDxH)简短规格信息生成格式为:每行数据的Models字段信息加冒号和空格": "再加上Dimensions字段的数据. 每行数据都作为单独一行.
+2. 读取HTML Spec的Dimensions (WxDxH)信息, 表格形式按以下规则选择条目
+2.1 ThinkStation和DT产品线规则:
+2.1.1 当HTML Spec的Dimensions (WxDxH)表格的"Models"字段存在"Tiny only"时, 直接取"Tiny only"所在行的Dimensions字段数据, 格式为"Tiny only:"+ 换行 + "Dimensions"字段数据.
+2.1.2 当HTML Spec的Dimensions (WxDxH)表格的行数为1时, 直接输出"Dimensions"字段数据.
+2.1.3 当HTML Spec的Dimensions (WxDxH)表格的行数多于1时, 取全部行数据, 规则是{Models字段数据}+":"+换行+"Dimensions"字段数据.
+2.2 Commercial, Consumer, SMB, Laptops产品线规则:
+2.2.1 当HTML Spec的Dimensions (WxDxH)表格的行数为1时, 直接输出"Dimensions"字段数据.
+2.2.2 当HTML Spec的Dimensions (WxDxH)表格的行数多于1时, 读取"Dimensions"字段下的数据, 找到文本"(maximum) mm"前数字最小的行数据, 格式为文本"Starting at:"+换行+"Dimensions"字段下, 文本"(maximum) mm"前数字最小的行数据.
+2.2.3 如果以上均不符合, 则取全部行数据, 规则是{Models字段数据}+":"+换行+"Dimensions"字段数据.
+3. 无论Dimensions (WxDxH)是普通文本还是表格字段, 源条目内部有换行时, 简短规格保留该换行.
+
+### 2026-10-16 规则更新
+- HTML Spec的Dimensions (WxDxH)条目内部包含换行时, 简短规格在对应位置保留换行；其他选择和输出规则不变.

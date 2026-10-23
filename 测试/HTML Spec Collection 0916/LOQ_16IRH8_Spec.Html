@@ -1,0 +1,589 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="/FrameworkFiles/iframeResizer/iframeResizer.contentWindow.min.js"></script>
+    <script src="/FrameworkFiles/jquery-2.1.1.min.js"></script>
+    <style>
+        @font-face {
+            font-family: "Gotham-Book";
+            src: url('/Resource/Font/Gotham-Book.otf');
+        }
+
+        * {
+            color: #646363;
+            padding: 0;
+            margin: 0;
+            font-size: 14px;
+            font-family: "Gotham-Book" !important;
+        }
+
+        h1 {
+            color: #E1251B;
+            border-bottom: 2px solid black;
+            padding-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .level1-content-container {
+            margin-bottom: 50px;
+        }
+
+        .level2-dd {
+            display: none;
+        }
+
+        h2 {
+            color: #294E95;
+            margin-top: 25px;
+            font-size: 18px;
+        }
+
+        h3 {
+            padding-top: 10px;
+            padding-bottom: 5px;
+        }
+
+        a {
+            text-decoration: none;
+        }
+
+        .level1-dt a {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .level2-dt {
+            line-height: 23px;
+            vertical-align: central;
+        }
+
+        .level2-dt a {
+            margin-left: -15px;
+        }
+
+        .level3-dt a {}
+
+        a:hover {
+            color: #294E95;
+            text-decoration: underline;
+        }
+
+        .active {
+            color: #294E95;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .level2-nav-container {
+            padding-left: 15px;
+            cursor: pointer;
+        }
+
+
+        .level3-nav-container {
+            padding-left: 15px;
+        }
+
+        dt,
+        dd {
+            padding: 3px 5px;
+        }
+
+        .fn-content-table {
+            border: 1px solid #808080;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        .fn-content-table td {
+            border: 1px solid #808080;
+            padding: 10px 5px;
+            white-space: pre-line !important;
+        }
+
+        .clear {
+            clear: both;
+        }
+
+        .sidebar {
+            float: left;
+            width: 249px;
+            overflow-y: scroll;
+            height: 100%;
+            position: fixed;
+        }
+
+        ::-webkit-scrollbar {
+            width: 5px;
+            /*对垂直流动条有效*/
+            height: 5px;
+            /*对水平流动条有效*/
+        }
+
+        /*定义滚动条的轨道颜色、内阴影及圆角*/
+        ::-webkit-scrollbar-track {
+            -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, .3);
+            background-color: mintcream;
+            border-radius: 3px;
+        }
+
+
+        /*定义滑块颜色、内阴影及圆角*/
+        ::-webkit-scrollbar-thumb {
+            border-radius: 7px;
+            -webkit-box-shadow: inset 0 0 5px rgba(0, 0, 0, .3);
+            background-color: #e8e5e5;
+        }
+
+        /*定义两端按钮的样式*/
+        ::-webkit-scrollbar-button {
+            background-color: none;
+        }
+
+        /*定义右下角汇合处的样式*/
+        ::-webkit-scrollbar-corner {
+            background: khaki;
+        }
+
+        .spec-content {
+            float: left;
+            margin-left: 260px;
+        }
+
+        .fn-header {
+            padding: 5px;
+            white-space: nowrap;
+        }
+
+        .fn-content {
+            padding: 5px;
+        }
+
+        .attr-header {
+            text-align: center;
+            background-color: #e8e5e5;
+        }
+
+        .titleProductName {
+            max-height: 20px;
+            background-color: white;
+            width: 100%;
+            text-align: left;
+            font-size: 20px;
+            box-shadow: 0px 10px 10px -10px #000000;
+            padding: 10px;
+            position: fixed;
+            top: 0px;
+            font-weight: 600;
+            padding-left: 30px;
+        }
+
+        .divFeatureValue ul {
+            list-style: outside;
+            padding-left: 20px;
+        }
+
+        .divFeatureValue {
+            max-width: 100%;
+        }
+
+        .noteTitle {
+            font-size: 11px;
+        }
+
+        .noteContent {
+            margin-top: 3px;
+            font-size: 11px;
+            font-style: italic;
+        }
+
+        .noteContent ul {
+            list-style: decimal !important;
+            padding-left: 20px;
+        }
+
+        .noteContent ul li,
+        .noteContent ul li span,
+        .noteContent ul li span a,
+        .noteContent ul li span a u {
+            font-size: 8pt !important;
+        }
+
+        .NoteHR {
+            BORDER-BOTTOM-STYLE: none;
+            BORDER-LEFT-STYLE: none;
+            BORDER-RIGHT-STYLE: none;
+            BORDER-TOP-STYLE: dotted;
+            width: 12%;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            height: 1px;
+            border-top: 2px dotted #808080;
+        }
+
+        .menuhighlight {
+            background-color: #E0FFFF !important;
+        }
+
+        .supText {
+            font-size: 0.6em;
+            color: #294E95;
+        }
+
+        .optionalStar {
+            color: #294E95;
+        }
+
+        .imagePanel {
+            /*height: 400px;*/
+            max-width: 95%;
+            margin: 0px auto;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .imagePanel img {
+            margin: 10px auto;
+            width: auto;
+            height: auto;
+            max-height: 100%;
+            max-width: 100%;
+        }
+
+        .overviewTextPanel {
+            margin: 50px auto 20px auto;
+            width: 100%;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .overviewTextPanel table {
+            margin: 0px auto;
+            border: 1px solid #808080;
+            border-collapse: collapse;
+        }
+
+        .overviewTextPanel table td {
+            font-size: 9pt;
+            text-align: left;
+            /*padding: 4px 10px;*/
+            /*width: 50%;*/
+            /*border: 0.5px solid gray;*/
+        }
+
+        .overviewTextPanel table td.overview_sortnumber {
+            width: 22px !important;
+            padding-left: 8px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+            border-top: 1px solid gray;
+            border-left: 1px solid gray;
+            border-bottom: 1px solid gray;
+        }
+
+        .overviewTextPanel table td.overview_text {
+            width: 335px !important;
+            border-top: 1px solid gray;
+            border-right: 1px solid gray;
+            border-bottom: 1px solid gray;
+            padding-right: 10px;
+            padding-top: 4px;
+            padding-bottom: 4px;
+        }
+
+
+        .overviewNotePanel {
+            margin: auto;
+            padding: 10px;
+            font-style: italic;
+        }
+
+        .overviewNotePanel ul {
+            list-style-type: decimal;
+            list-style-position: inside;
+        }
+
+        .overviewNotePanel ul li {
+            white-space: pre-line;
+            font-size: 8pt !important;
+            white-space: pre-line;
+            margin-bottom: 3px;
+        }
+
+        .foldingiconDiv {
+            left: -20px;
+            top: 2px;
+            text-align: left;
+            display: inline;
+            position: relative;
+            vertical-align: central;
+        }
+
+        .foldingicon {
+            display: inline;
+        }
+
+        .foldingicon span svg {
+            top: 50%;
+            margin-top: -8px;
+        }
+
+        .iconHide {
+            display: none;
+        }
+
+        #div_disclamor {
+            margin-bottom: 0px;
+            /*white-space: pre-line;*/
+            margin-right: 50px;
+        }
+
+        #div_disclamor ul {
+            list-style-position: outside;
+            list-style-type: disc;
+            margin-left: 20px;
+            line-height: 20px;
+        }
+
+        #div_disclamor ul li {
+            /*margin-top: 10px;*/
+        }
+
+        .note_number {
+            color: #294E95;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="titleHead">
+        <div class="titleProductName">
+            LOQ 16IRH8
+                <span style="margin-left:20%;">Last Modify Time: 2025-01-21 14:41:52</span>
+        </div>
+    </div>
+    <div style="width:100% !important;height:50px;" class="spaceDiv"></div>
+    <div id="div_Container">
+        <div class="sidebar">
+            <dl class='level1-nav-container'>
+<dt class='level1-dt'><a id='nav_l1_Overview'  href='#l1_Overview'>Overview</a></dt><dd class='level1-dd'></dd><dt class='level1-dt'><a id='nav_l1_Performance' href='#l1_Performance'>Performance</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Processor' href='#l2_Processor'>Processor</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_ProcessorFamily' href='#l3_ProcessorFamily'>Processor Family</a></dt><dt class='level3-dt'><a id='nav_l3_Processor' href='#l3_Processor'>Processor</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_OperatingSystem' href='#l2_OperatingSystem'>Operating System</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_OperatingSystem' href='#l3_OperatingSystem'>Operating System</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Graphics' href='#l2_Graphics'>Graphics</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Graphics' href='#l3_Graphics'>Graphics</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_MonitorSupport' href='#l2_MonitorSupport'>Monitor Support</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_MonitorSupport' href='#l3_MonitorSupport'>Monitor Support</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Chipset' href='#l2_Chipset'>Chipset</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Chipset' href='#l3_Chipset'>Chipset</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Memory' href='#l2_Memory'>Memory</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_MaxMemory' href='#l3_MaxMemory'>Max Memory</a></dt><dt class='level3-dt'><a id='nav_l3_MemorySlots' href='#l3_MemorySlots'>Memory Slots</a></dt><dt class='level3-dt'><a id='nav_l3_MemoryType' href='#l3_MemoryType'>Memory Type</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Storage' href='#l2_Storage'>Storage</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_MaxStorageSupport' href='#l3_MaxStorageSupport'>Max Storage Support</a></dt><dt class='level3-dt'><a id='nav_l3_StorageSlot' href='#l3_StorageSlot'>Storage Slot</a></dt><dt class='level3-dt'><a id='nav_l3_StorageType' href='#l3_StorageType'>Storage Type</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_RemovableStorage' href='#l2_RemovableStorage'>Removable Storage</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_CardReader' href='#l3_CardReader'>Card Reader</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_MultiMedia' href='#l2_MultiMedia'>Multi-Media</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_AudioChip' href='#l3_AudioChip'>Audio Chip</a></dt><dt class='level3-dt'><a id='nav_l3_Speakers' href='#l3_Speakers'>Speakers</a></dt><dt class='level3-dt'><a id='nav_l3_Microphone' href='#l3_Microphone'>Microphone</a></dt><dt class='level3-dt'><a id='nav_l3_Camera' href='#l3_Camera'>Camera</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Battery' href='#l2_Battery'>Battery</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Battery' href='#l3_Battery'>Battery</a></dt><dt class='level3-dt'><a id='nav_l3_MaxBatteryLife' href='#l3_MaxBatteryLife'>Max Battery Life</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_PowerAdapter' href='#l2_PowerAdapter'>Power Adapter</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_PowerAdapter' href='#l3_PowerAdapter'>Power Adapter</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_SpecialFeatures' href='#l2_SpecialFeatures'>Special Features</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_SpecialFeatures' href='#l3_SpecialFeatures'>Special Features</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Design' href='#l1_Design'>Design</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Display' href='#l2_Display'>Display</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Display' href='#l3_Display'>Display</a></dt><dt class='level3-dt'><a id='nav_l3_Touchscreen' href='#l3_Touchscreen'>Touchscreen</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_InputDevice' href='#l2_InputDevice'>Input Device</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Pen' href='#l3_Pen'>Pen</a></dt><dt class='level3-dt'><a id='nav_l3_Keyboard' href='#l3_Keyboard'>Keyboard</a></dt><dt class='level3-dt'><a id='nav_l3_KeyboardBacklight' href='#l3_KeyboardBacklight'>Keyboard Backlight</a></dt><dt class='level3-dt'><a id='nav_l3_Touchpad' href='#l3_Touchpad'>Touchpad</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Mechanical' href='#l2_Mechanical'>Mechanical</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_DimensionsWxDxH' href='#l3_DimensionsWxDxH'>Dimensions (WxDxH)</a></dt><dt class='level3-dt'><a id='nav_l3_Weight' href='#l3_Weight'>Weight</a></dt><dt class='level3-dt'><a id='nav_l3_CaseColor' href='#l3_CaseColor'>Case Color</a></dt><dt class='level3-dt'><a id='nav_l3_SurfaceTreatment' href='#l3_SurfaceTreatment'>Surface Treatment</a></dt><dt class='level3-dt'><a id='nav_l3_CaseMaterial' href='#l3_CaseMaterial'>Case Material</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Connectivity' href='#l1_Connectivity'>Connectivity</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Network' href='#l2_Network'>Network</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_WLANBluetooth' href='#l3_WLANBluetooth'>WLAN + Bluetooth</a></dt><dt class='level3-dt'><a id='nav_l3_WWAN' href='#l3_WWAN'>WWAN</a></dt><dt class='level3-dt'><a id='nav_l3_Ethernet' href='#l3_Ethernet'>Ethernet</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Ports' href='#l2_Ports'>Ports</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_StandardPorts' href='#l3_StandardPorts'>Standard Ports</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Docking' href='#l2_Docking'>Docking</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Docking' href='#l3_Docking'>Docking</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_SecurityPrivacy' href='#l1_SecurityPrivacy'>Security & Privacy</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Security' href='#l2_Security'>Security</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_SecurityChip' href='#l3_SecurityChip'>Security Chip</a></dt><dt class='level3-dt'><a id='nav_l3_FingerprintReader' href='#l3_FingerprintReader'>Fingerprint Reader</a></dt><dt class='level3-dt'><a id='nav_l3_BIOSSecurity' href='#l3_BIOSSecurity'>BIOS Security</a></dt><dt class='level3-dt'><a id='nav_l3_OtherSecurity' href='#l3_OtherSecurity'>Other Security</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Service' href='#l1_Service'>Service</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_Warranty' href='#l2_Warranty'>Warranty</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_BaseWarranty' href='#l3_BaseWarranty'>Base Warranty</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Accessories' href='#l1_Accessories'>Accessories</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_BundledAccessories' href='#l2_BundledAccessories'>Bundled Accessories</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_BundledAccessories' href='#l3_BundledAccessories'>Bundled Accessories</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_OperatingRequirements' href='#l1_OperatingRequirements'>Operating Requirements</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_OperatingEnvironment' href='#l2_OperatingEnvironment'>Operating Environment</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_Temperature' href='#l3_Temperature'>Temperature</a></dt><dt class='level3-dt'><a id='nav_l3_RelativeHumidity' href='#l3_RelativeHumidity'>Relative Humidity</a></dt><dt class='level3-dt'><a id='nav_l3_Altitude' href='#l3_Altitude'>Altitude</a></dt></dl></dd></dl>
+</dd>
+<dt class='level1-dt'><a id='nav_l1_Certifications' href='#l1_Certifications'>Certifications</a></dt><dd class='level1-dd'><dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_GreenCertifications' href='#l2_GreenCertifications'>Green Certifications</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_GreenCertifications' href='#l3_GreenCertifications'>Green Certifications</a></dt></dl></dd></dl>
+<dl class='level2-nav-container'><dt class='level2-dt'><a id='nav_l2_OtherCertifications' href='#l2_OtherCertifications'>Other Certifications</a></dt><dd class='level2-dd'><dl class='level3-nav-container'><dt class='level3-dt'><a id='nav_l3_MilSpecTest' href='#l3_MilSpecTest'>Mil-Spec Test</a></dt><dt class='level3-dt'><a id='nav_l3_OtherCertifications' href='#l3_OtherCertifications'>Other Certifications</a></dt></dl></dd></dl>
+</dd>
+</dl>
+        </div>
+        <div class="spec-content">
+            <h1>Overview<a id='l1_Overview'></a></h1><div class='level1-content-container'><div class='imagePanel'><img src='/syspool/Sys/PDF\LOQ\LOQ_16IRH8\LOQ_16IRH8_OverViewPic.jpg' /></div><div class='overviewTextPanel'><table cellpadding='0' cellspacing='0'><tbody><tr><td class='overview_sortnumber'>1.</td><td class='overview_text'>USB 3.2 Gen 1</td><td class='overview_sortnumber'>5.</td><td class='overview_text'>HDMI</td></tr><tr><td class='overview_sortnumber'>2.</td><td class='overview_text'>USB 3.2 Gen 2</td><td class='overview_sortnumber'>6.</td><td class='overview_text'>Power connector</td></tr><tr><td class='overview_sortnumber'>3.</td><td class='overview_text'>USB 3.2 Gen 2</td><td class='overview_sortnumber'>7.</td><td class='overview_text'>USB-C 3.2 Gen 2</td></tr><tr><td class='overview_sortnumber'>4.</td><td class='overview_text'>Ethernet (RJ-45)</td><td class='overview_sortnumber'>8.</td><td class='overview_text'>Headphone / microphone combo jack (3.5mm)</td></tr></tbody></table></div><div class='overviewNotePanel'></div></div>
+                <h1>Performance<a id='l1_Performance'></a></h1><div class='level1-content-container'><h2 specStructure='Processor'>Processor<a id='l2_Processor'></a></h2><div specStructure='Processor'><h3>Processor Family<a id='l3_ProcessorFamily'></a></h3><div class='divFeatureValue'><span>13th Generation Intel&reg; Core&trade; i5 / i7 Processor</span></div></div><div specStructure='Processor'><h3>Processor<span class='optionalStar'>**</span><sup><span class='supText'>[1]</span></sup><a id='l3_Processor'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Processor Name</td><td class='attr-header'>Cores</td><td class='attr-header'>Threads</td><td class='attr-header'>Base Frequency</td><td class='attr-header'>Max Frequency</td><td class='attr-header'>Cache</td><td class='attr-header'>Processor Graphics</td></tr>
+<tr>
+<td>Core i5-13420H</td><td>8 (4 P-core + 4 E-core)</td><td>12</td><td>P-core 2.1GHz / E-core 1.5GHz</td><td>P-core 4.6GHz / E-core 3.4GHz</td><td>12MB</td><td>Intel&reg; UHD Graphics</td></tr>
+<tr>
+<td>Core i5-13500H</td><td>12 (4 P-core + 8 E-core)</td><td>16</td><td>P-core 2.6GHz / E-core 1.9GHz</td><td>P-core 4.7GHz / E-core 3.5GHz</td><td>18MB</td><td>Intel&reg; Iris&reg; Xe Graphics</td></tr>
+<tr>
+<td>Core i7-13620H</td><td>10 (6 P-core + 4 E-core)</td><td>16</td><td>P-core 2.4GHz / E-core 1.8GHz</td><td>P-core 4.9GHz / E-core 3.6GHz</td><td>24MB</td><td>Intel&reg; UHD Graphics</td></tr>
+<tr>
+<td>Core i7-13700H</td><td>14 (6 P-core + 8 E-core)</td><td>20</td><td>P-core 2.4GHz / E-core 1.8GHz</td><td>P-core 5.0GHz / E-core 3.7GHz</td><td>24MB</td><td>Intel&reg; Iris&reg; Xe Graphics</td></tr>
+</table></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>Intel&reg; Iris&reg; Xe Graphics capability requires system to be configured with dual-channel memory. On the system with single-channel memory, Intel&reg; Iris&reg; Xe Graphics will function as Intel&reg; UHD Graphics.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Product</strong></td></table></div>
+<h2 specStructure='Operating System'>Operating System<a id='l2_OperatingSystem'></a></h2><div specStructure='Operating System'><h3>Operating System<span class='optionalStar'>**</span><a id='l3_OperatingSystem'></a></h3><div class='divFeatureValue'><ul><li><span>Windows&reg; 11 Pro</span></li>
+<li><span>Windows&reg; 11 Home</span></li>
+<li><span>Windows&reg; 11 Home Single Language</span></li>
+<li><span>No preload operating system</span></li>
+</ul></div></div><h2 specStructure='Graphics'>Graphics<a id='l2_Graphics'></a></h2><div specStructure='Graphics'><h3>Graphics<span class='optionalStar'>**</span><a id='l3_Graphics'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Graphics</td><td class='attr-header'>Type</td><td class='attr-header'>Memory</td><td class='attr-header'>Boost Clock</td><td class='attr-header'>TGP</td><td class='attr-header'>Key Features</td></tr>
+<tr>
+<td>NVIDIA&reg; GeForce RTX&trade; 2050 Laptop GPU</td><td>Discrete</td><td>4GB GDDR6</td><td>1575 MHz</td><td>70W</td><td>MUX Switch, VR ready, DirectX&reg; 12, Ray Tracing</td></tr>
+<tr>
+<td>NVIDIA&reg; GeForce RTX&trade; 3050 Laptop GPU</td><td>Discrete</td><td>6GB GDDR6</td><td>1732 MHz</td><td>95W</td><td>MUX Switch, Advanced Optimus, Dynamic Boost 2.0, DirectX&reg; 12 Ultimate</td></tr>
+<tr>
+<td>NVIDIA&reg; GeForce RTX&trade; 4050 Laptop GPU</td><td>Discrete</td><td>6GB GDDR6</td><td>2370 MHz</td><td>95W</td><td>MUX Switch, Advanced Optimus, DLSS 3.5, Dynamic Boost 2.0, DirectX&reg; 12 Ultimate</td></tr>
+<tr>
+<td>NVIDIA&reg; GeForce RTX&trade; 4060 Laptop GPU</td><td>Discrete</td><td>8GB GDDR6</td><td>2370 MHz</td><td>115W</td><td>MUX Switch, Advanced Optimus, DLSS 3.5, Dynamic Boost 2.0, VR ready, DirectX&reg; 12 Ultimate</td></tr>
+</table></div></div><h2 specStructure='Monitor Support'>Monitor Support<a id='l2_MonitorSupport'></a></h2><div specStructure='Monitor Support'><h3>Monitor Support<a id='l3_MonitorSupport'></a></h3><div class='divFeatureValue'><span>Supports up to 3 independent displays (native display and 2 external monitors via HDMI&reg;, USB-C&reg;)
+• HDMI&reg; supports up to 4096x2160@60Hz
+• USB-C&reg; supports up to 5120x3200@60Hz</span></div></div><h2 specStructure='Chipset'>Chipset<a id='l2_Chipset'></a></h2><div specStructure='Chipset'><h3>Chipset<a id='l3_Chipset'></a></h3><div class='divFeatureValue'><span>Intel&reg; SoC (System on Chip) platform</span></div></div><h2 specStructure='Memory'>Memory<a id='l2_Memory'></a></h2><div specStructure='Memory'><h3>Max Memory<sup><span class='supText'>[1]</span></sup><a id='l3_MaxMemory'></a></h3><div class='divFeatureValue'><span>Up to 32GB DDR5-5200</span></div></div><div specStructure='Memory'><h3>Memory Slots<a id='l3_MemorySlots'></a></h3><div class='divFeatureValue'><span>Two DDR5 SO-DIMM slots, dual-channel capable</span></div></div><div specStructure='Memory'><h3>Memory Type<sup><span class='supText'>[2]</span></sup><a id='l3_MemoryType'></a></h3><div class='divFeatureValue'><span>DDR5-5200</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>Maximum memory is only to test technical readiness of notebook. Available memory to sell would vary.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Product</strong></td><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[2]</span> <span>Installed memory is actually DDR5-5600 but may run as DDR5-5200 due to processor limitation.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Product</strong></td></table></div>
+<h2 specStructure='Storage'>Storage<a id='l2_Storage'></a></h2><div specStructure='Storage'><h3>Max Storage Support<sup><span class='supText'>[1]</span></sup><a id='l3_MaxStorageSupport'></a></h3><div class='divFeatureValue'><span>Up to two drives, 2x M.2 SSD
+• M.2 2242 SSD up to 1TB each</span></div></div><div specStructure='Storage'><h3>Storage Slot<a id='l3_StorageSlot'></a></h3><div class='divFeatureValue'><span>Two M.2 slots
+• One M.2 2242 PCIe&reg; 4.0 x4 slot
+• One M.2 2280 PCIe&reg; 4.0 x4 slot</span></div></div><div specStructure='Storage'><h3>Storage Type<a id='l3_StorageType'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Disk Type</td><td class='attr-header'>Interface</td><td class='attr-header'>Offering</td></tr>
+<tr>
+<td>M.2 2242 SSD</td><td>PCIe&reg; NVMe&reg;, PCIe&reg; 4.0 x4</td><td>512GB / 1TB</td></tr>
+</table></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The storage capacity supported is based on the test results with current Lenovo&reg; storage offerings.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Classification Default</strong></td></table></div>
+<h2 specStructure='Removable Storage'>Removable Storage<a id='l2_RemovableStorage'></a></h2><div specStructure='Removable Storage'><h3>Card Reader<a id='l3_CardReader'></a></h3><div class='divFeatureValue'><span>No card reader</span></div></div><h2 specStructure='Multi-Media'>Multi-Media<a id='l2_MultiMedia'></a></h2><div specStructure='Multi-Media'><h3>Audio Chip<a id='l3_AudioChip'></a></h3><div class='divFeatureValue'><span>High Definition (HD) Audio, Realtek&reg; ALC3287 codec</span></div></div><div specStructure='Multi-Media'><h3>Speakers<a id='l3_Speakers'></a></h3><div class='divFeatureValue'><span>Stereo speakers, 2W x2, optimized with Nahimic Gaming Audio</span></div></div><div specStructure='Multi-Media'><h3>Microphone<a id='l3_Microphone'></a></h3><div class='divFeatureValue'><span>Dual-microphone array</span></div></div><div specStructure='Multi-Media'><h3>Camera<a id='l3_Camera'></a></h3><div class='divFeatureValue'><span>FHD 1080p, with E-shutter, fixed focus</span></div></div><h2 specStructure='Battery'>Battery<a id='l2_Battery'></a></h2><div specStructure='Battery'><h3>Battery<span class='optionalStar'>**</span><a id='l3_Battery'></a></h3><div class='divFeatureValue'><ul><li><span>60Wh Rechargeable Li-ion Battery, supports Rapid Charge (charge up to 80% in 1hr)</span></li>
+<li><span>80Wh Rechargeable Li-ion Battery, supports Rapid Charge Pro (charge up to 50% in 30min)</span></li>
+</ul></div></div><div specStructure='Battery'><h3>Max Battery Life<sup><span class='supText'>[1]</span></sup><a id='l3_MaxBatteryLife'></a></h3><div class='divFeatureValue'><ul><li><span>Models with 60Wh battery:
+MobileMark&reg; 2018: 5.7 hr
+Local video (1080p) playback@150nits: 7.4 hr</span></li>
+<li><span>Models with 80Wh battery:
+MobileMark&reg; 2018: 8.3 hr
+Local video (1080p) playback@150nits: 10.4 hr</span></li>
+</ul></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>All battery life claims are approximate maximum and based on results using the MobileMark&reg; 2014, MobileMark&reg; 2018, MobileMark&reg; 25, MobileMark&reg; 30, JEITA 2.0, JEITA 3.0, continuous 1080p video playback (with 150nits brightness and default volume level) or Google Power Load Test (PLT) battery-life benchmark tests. Actual battery life will vary depending on many factors such as product configuration and usage, software use, wireless functionality, power management settings, and screen brightness. The maximum capacity of the battery will decrease with time and use.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Classification Default</strong></td></table></div>
+<h2 specStructure='Power Adapter'>Power Adapter<a id='l2_PowerAdapter'></a></h2><div specStructure='Power Adapter'><h3>Power Adapter<span class='optionalStar'>**</span><sup><span class='supText'>[1]</span></sup><a id='l3_PowerAdapter'></a></h3><div class='divFeatureValue'><ul><li><span>135W slim tip (3-pin) AC adapter, 100-240V, 50-60Hz</span></li>
+<li><span>170W slim tip (3-pin) AC adapter, 100-240V, 50-60Hz</span></li>
+<li><span>230W slim tip (3-pin) AC adapter, 100-240V, 50-60Hz</span></li>
+</ul></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>AC adapter offerings depend on the country.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Classification Default</strong></td></table></div>
+<h2 specStructure='Special Features'>Special Features<a id='l2_SpecialFeatures'></a></h2><div specStructure='Special Features'><h3>Special Features<a id='l3_SpecialFeatures'></a></h3><div class='divFeatureValue'><span>AI Chip: LA1</span></div></div></div>
+<h1>Design<a id='l1_Design'></a></h1><div class='level1-content-container'><h2 specStructure='Display'>Display<a id='l2_Display'></a></h2><div specStructure='Display'><h3>Display<span class='optionalStar'>**</span><sup><span class='supText'>[1]</span></sup><a id='l3_Display'></a></h3><div class='divFeatureValue'><table class='fn-content-table'><tr>
+<td class='attr-header'>Size</td><td class='attr-header'>Resolution</td><td class='attr-header'>Touch</td><td class='attr-header'>Type</td><td class='attr-header'>Brightness</td><td class='attr-header'>Surface</td><td class='attr-header'>Aspect Ratio</td><td class='attr-header'>Contrast Ratio</td><td class='attr-header'>Color Gamut</td><td class='attr-header'>Refresh Rate</td><td class='attr-header'>Viewing Angle (L/R/U/D)</td><td class='attr-header'>Key Features</td></tr>
+<tr>
+<td>16"</td><td>WUXGA (1920x1200)</td><td>None</td><td>IPS</td><td>350nits</td><td>Anti-glare</td><td>16:10</td><td>1200:1</td><td>45% NTSC</td><td>144Hz</td><td>89° / 89° / 89° / 89°</td><td>NVIDIA&reg; G-SYNC&reg;, Advanced Optimus</td></tr>
+<tr>
+<td>16"</td><td>WQXGA (2560x1600)</td><td>None</td><td>IPS</td><td>350nits</td><td>Anti-glare</td><td>16:10</td><td>1200:1</td><td>100% sRGB</td><td>165Hz</td><td>89° / 89° / 89° / 89°</td><td>NVIDIA&reg; G-SYNC&reg;, TÜV Low Blue Light, Advanced Optimus support</td></tr>
+</table></div></div><div specStructure='Display'><h3>Touchscreen<a id='l3_Touchscreen'></a></h3><div class='divFeatureValue'><span>Non-touch</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>IPS (in-plane switching) technology may refer to IPS, PLS, ADS, AHVA, AAS.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Product</strong></td></table></div>
+<h2 specStructure='Input Device'>Input Device<a id='l2_InputDevice'></a></h2><div specStructure='Input Device'><h3>Pen<a id='l3_Pen'></a></h3><div class='divFeatureValue'><span>No support</span></div></div><div specStructure='Input Device'><h3>Keyboard<a id='l3_Keyboard'></a></h3><div class='divFeatureValue'><span>6-row, multimedia Fn keys, numeric keypad</span></div></div><div specStructure='Input Device'><h3>Keyboard Backlight<span class='optionalStar'>**</span><a id='l3_KeyboardBacklight'></a></h3><div class='divFeatureValue'><ul><li><span>4-Zone RGB backlight</span></li>
+<li><span>White backlight</span></li>
+</ul></div></div><div specStructure='Input Device'><h3>Touchpad<a id='l3_Touchpad'></a></h3><div class='divFeatureValue'><span>Buttonless Mylar&reg; surface multi-touch touchpad, supports Precision TouchPad (PTP), 75 x 120 mm (2.95 x 4.72 inches)</span></div></div><h2 specStructure='Mechanical'>Mechanical<a id='l2_Mechanical'></a></h2><div specStructure='Mechanical'><h3>Dimensions (WxDxH)<sup><span class='supText'>[1]</span></sup><a id='l3_DimensionsWxDxH'></a></h3><div class='divFeatureValue'><span>359.6 x 277.6 x 21-25.9 mm (14.16 x 10.93 x 0.83-1.02 inches)</span></div></div><div specStructure='Mechanical'><h3>Weight<sup><span class='supText'>[2]</span></sup><a id='l3_Weight'></a></h3><div class='divFeatureValue'><span>Starting at 2.6 kg (5.73 lbs)</span></div></div><div specStructure='Mechanical'><h3>Case Color<a id='l3_CaseColor'></a></h3><div class='divFeatureValue'><span>Storm grey</span></div></div><div specStructure='Mechanical'><h3>Surface Treatment<a id='l3_SurfaceTreatment'></a></h3><div class='divFeatureValue'><span>Painting</span></div></div><div specStructure='Mechanical'><h3>Case Material<a id='l3_CaseMaterial'></a></h3><div class='divFeatureValue'><span>PC-ABS (top), PC-ABS (bottom)</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The system dimensions may vary depending on configurations.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Feature Default</strong></td><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[2]</span> <span>The system weight is approximate and based on results in Lenovo&reg; lab, which varies depending on the source of component, variance of the distribution of each component, and manufacturing process. It may not be the exact weight for each specific model.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Feature Default</strong></td></table></div>
+</div>
+<h1>Connectivity<a id='l1_Connectivity'></a></h1><div class='level1-content-container'><h2 specStructure='Network'>Network<a id='l2_Network'></a></h2><div specStructure='Network'><h3>WLAN + Bluetooth&reg;<sup><span class='supText'>[1][2]</span></sup><a id='l3_WLANBluetooth'></a></h3><div class='divFeatureValue'><span>Wi-Fi&reg; 6, 802.11ax 2x2 Wi-Fi&reg; + Bluetooth&reg; 5.2, M.2 card</span></div></div><div specStructure='Network'><h3>WWAN<a id='l3_WWAN'></a></h3><div class='divFeatureValue'><span>No support</span></div></div><div specStructure='Network'><h3>Ethernet<sup><span class='supText'>[3]</span></sup><a id='l3_Ethernet'></a></h3><div class='divFeatureValue'><span>Gigabit Ethernet, 1x RJ-45, supports Wake-on-LAN</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>Bluetooth&reg; may operate at a lower version than hardware design depending on the factors such as operating system, driver, etc.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Classification Default</strong></td><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[2]</span> <span>Wi-Fi&reg; 6 full features might be limited by country-level restrictions.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Product</strong></td><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[3]</span> <span>Wake-on-LAN needs the power adapter plugged in.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>ProductLine Default</strong></td></table></div>
+<h2 specStructure='Ports'>Ports<sup><span class='supText'>[1]</span></sup><a id='l2_Ports'></a></h2><div specStructure='Ports'><h3>Standard Ports<a id='l3_StandardPorts'></a></h3><div class='divFeatureValue'><ul><li><span>1x USB 3.2 Gen 1</span></li>
+<li><span>2x USB 3.2 Gen 2</span></li>
+<li><span>1x USB-C&reg; 3.2 Gen 2 (support data transfer, Lenovo&reg; Power Delivery 140W and DisplayPort&trade; 1.4)<sup><span class='supText'>[2]</span></sup></span></li>
+<li><span>1x HDMI&reg; 2.1, up to 8K/60Hz</span></li>
+<li><span>1x Headphone / microphone combo jack (3.5mm)</span></li>
+<li><span>1x Ethernet (RJ-45)</span></li>
+<li><span>1x Power connector</span></li>
+</ul></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The transfer speed of following ports will vary and, depending on many factors, such as the processing speed of the host device, file attributes and other factors related to system configuration and your operating environment, will be slower than theoretical speed.
+USB 2.0: 480 Mbit/s;
+USB 3.2 Gen 1 (SuperSpeed USB 5Gbps, formerly USB 3.0 / USB 3.1 Gen 1): 5 Gbit/s;
+USB 3.2 Gen 2 (SuperSpeed USB 10Gbps, formerly USB 3.1 Gen 2): 10 Gbit/s;
+USB4&reg; 20Gbps / USB 3.2 Gen 2x2 (SuperSpeed USB 20Gbps): 20 Gbit/s;
+USB4&reg; 40Gbps (USB 40Gbps): 40 Gbit/s;
+Thunderbolt&trade; 3/4: 40 Gbit/s.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>StructureLevel2</strong></td><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[2]</span> <span>PD 140W is the input power and requires the use of Lenovo&reg; unique adapter, otherwise it may support lower than 140W.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>FeatureValue</strong></td></table></div>
+<h2 specStructure='Docking'>Docking<a id='l2_Docking'></a></h2><div specStructure='Docking'><h3>Docking<a id='l3_Docking'></a></h3><div class='divFeatureValue'><span>Various docking solutions supported via USB-C&reg;.
+For more compatible docking solutions, please visit <a href="https://psref.lenovo.com/accessories/?category=Docking&system=82XW" target="_blank"><u>Docking for LOQ&trade; 16IRH8</u></a></span></div></div></div>
+<h1>Security & Privacy<a id='l1_SecurityPrivacy'></a></h1><div class='level1-content-container'><h2 specStructure='Security'>Security<a id='l2_Security'></a></h2><div specStructure='Security'><h3>Security Chip<a id='l3_SecurityChip'></a></h3><div class='divFeatureValue'><span>Firmware TPM 2.0 integrated in SoC</span></div></div><div specStructure='Security'><h3>Fingerprint Reader<a id='l3_FingerprintReader'></a></h3><div class='divFeatureValue'><span>No fingerprint reader</span></div></div><div specStructure='Security'><h3>BIOS Security<a id='l3_BIOSSecurity'></a></h3><div class='divFeatureValue'><ul><li><span>Administrator password</span></li>
+<li><span>Master hard disk password</span></li>
+<li><span>Power-on password</span></li>
+<li><span>User hard disk password</span></li>
+<li><span>User password</span></li>
+<li><span>Self-healing BIOS</span></li>
+<li><span>More BIOS security features, please visit <a href=" https://download.lenovo.com/bsco/index.html#/graphicalsimulator/loq%2016IRH8%20(82XW)" target="_blank"><u>BIOS Simulator</u></a><sup><span class='supText'>[1]</span></sup></span></li>
+</ul></div></div><div specStructure='Security'><h3>Other Security<a id='l3_OtherSecurity'></a></h3><div class='divFeatureValue'><span>E-shutter</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The BIOS simulator is just for reference. Default settings and some options may vary depending on the hardware, operating system and BIOS version.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>FeatureValue</strong></td></table></div>
+</div>
+<h1>Service<a id='l1_Service'></a></h1><div class='level1-content-container'><h2 specStructure='Warranty'>Warranty<a id='l2_Warranty'></a></h2><div specStructure='Warranty'><h3>Base Warranty<span class='optionalStar'>**</span><a id='l3_BaseWarranty'></a></h3><div class='divFeatureValue'><ul><li><span>1-year courier or carry-in service</span></li>
+<li><span>1-year courier or carry-in with 2-year system board service (Korea only)</span></li>
+<li><span>2-year (1-yr battery) courier or carry-in service</span></li>
+<li><span>3-year (1-yr battery) courier or carry-in service</span></li>
+</ul></div></div></div>
+<h1>Accessories<a id='l1_Accessories'></a></h1><div class='level1-content-container'><h2 specStructure='Bundled Accessories'>Bundled Accessories<a id='l2_BundledAccessories'></a></h2><div specStructure='Bundled Accessories'><h3>Bundled Accessories<sup><span class='supText'>[1]</span></sup><a id='l3_BundledAccessories'></a></h3><div class='divFeatureValue'><ul><li><span>Lenovo&reg; LOQ&trade; M100 RGB Mouse (USB connector)</span></li>
+<li><span>None</span></li>
+</ul></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>For more compatible accessory solutions, please visit <a href="https://psref.lenovo.com/accessories/?system=82XW" target="_blank"><u>Accessories for LOQ&trade; 16IRH8</u></a></span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Product</strong></td></table></div>
+</div>
+<h1>Operating Requirements<a id='l1_OperatingRequirements'></a></h1><div class='level1-content-container'><h2 specStructure='Operating Environment'>Operating Environment<a id='l2_OperatingEnvironment'></a></h2><div specStructure='Operating Environment'><h3>Temperature<sup><span class='supText'>[1]</span></sup><a id='l3_Temperature'></a></h3><div class='divFeatureValue'><ul><li><span>At altitudes up to 2438 m (8,000 ft)
+- Operating: 5°C to 35°C (41°F to 95°F) 
+- Storage: 5°C to 43°C (41°F to 109°F)</span></li>
+<li><span>At altitudes above 2438 m (8,000 ft)
+- Maximum temperature when operating under the unpressurized condition: 31.3°C (88°F)</span></li>
+</ul></div></div><div specStructure='Operating Environment'><h3>Relative Humidity<a id='l3_RelativeHumidity'></a></h3><div class='divFeatureValue'><ul><li><span>Operating: 8% to 95% at wet-bulb temperature 23°C (73°F)</span></li>
+<li><span>Storage: 5% to 95% at wet-bulb temperature 27°C (81°F)</span></li>
+</ul></div></div><div specStructure='Operating Environment'><h3>Altitude<a id='l3_Altitude'></a></h3><div class='divFeatureValue'><span>Maximum altitude (without pressurization): 3048 m (10,000 ft)</span></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>When you charge the battery, its temperature must be no lower than 10°C (50°F).</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>Classification Default</strong></td></table></div>
+</div>
+<h1>Certifications<a id='l1_Certifications'></a></h1><div class='level1-content-container'><h2 specStructure='Green Certifications'>Green Certifications<sup><span class='supText'>[1]</span></sup><a id='l2_GreenCertifications'></a></h2><div specStructure='Green Certifications'><h3>Green Certifications<a id='l3_GreenCertifications'></a></h3><div class='divFeatureValue'><ul><li><span>ErP Lot 6/26</span></li>
+<li><span>RoHS compliant</span></li>
+</ul></div></div><hr class='NoteHR' style='' /><div style='noteTitle'>Notes:</div><div class='divFeatureValue noteContent'><table><tr><td style='white-space: pre-line;vertical-align: top;'><span class='note_number'>[1]</span> <span>The items listed under the "Green Certifications" section may not only refer to certification but also registration or self-declaration. For ESG & regulatory compliance documents, please visit <a href="https://compliance.lenovo.com/" target="_blank"><u>https://compliance.lenovo.com</u></a>.</span><strong class='as_note_type' style='display:none;margin-left:25px;BACKGROUND-COLOR: PINK;'>StructureLevel2</strong></td></table></div>
+<h2 specStructure='Other Certifications'>Other Certifications<a id='l2_OtherCertifications'></a></h2><div specStructure='Other Certifications'><h3>Mil-Spec Test<a id='l3_MilSpecTest'></a></h3><div class='divFeatureValue'><span>MIL-STD-810H military test passed</span></div></div><div specStructure='Other Certifications'><h3>Other Certifications<a id='l3_OtherCertifications'></a></h3><div class='divFeatureValue'><span>(Optional) TÜV Rheinland&reg; Low Blue Light (Hardware Solution)</span></div></div></div>
+                    <div id="div_disclamor">
+                        <ul>
+                            <li>Feature with ** means that only one option listed under the feature can be configured on selected models. Please refer to the model configuration for specific information.</li>
+                                    <li>Lenovo reserves the right to change specifications or other product information
+                                        without notice. Lenovo is not responsible for photographic or typographical
+                                        errors. LENOVO PROVIDES THIS PUBLICATION “AS IS,” WITHOUT WARRANTY OF ANY KIND,
+                                        EITHER EXPRESS OR IMPLIED, INCLUDING THE IMPLIED WARRANTIES OF MERCHANTABILITY
+                                        OR FITNESS FOR A PARTICULAR PURPOSE. Some jurisdictions do not allow disclaimer
+                                        of express or implied warranties in certain transactions, therefore this
+                                        disclaimer may not apply to you.</li>
+                                    <li>The specifications on this page may not be available in all regions, and may be
+                                        changed or updated without notice.</li>
+                        </ul>
+                    </div>
+        </div>
+        <div class="clear"></div>
+    </div>
+    <script type="text/javascript">
+        $(function () {
+            $('.sidebar a').click(function () {
+                $('.sidebar a').removeClass('active');
+                $(this).addClass('active');
+                var href = $(this).attr('href');
+                var pos = $(href).offset().top + 250;
+                $("html,body", window.parent.document).eq(0).animate({ scrollTop: pos }, 1000);
+                return false;
+            });
+            $('.level1-content-container div div span').css('white-space', 'pre-line');
+            AutoSizeContainerWidth();
+            $.each($('.sidebar .level2-dt'), function (thisIndex, thisItem) {
+                if ($(thisItem).next().find('dt').length > 1) {
+                    $(thisItem).find('a').before('<div class="foldingiconDiv"><div class="foldingicon iconright"><svg t="1632474865024" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3667" width="16" height="16"><path d="M853.333333 480H544V170.666667c0-17.066667-14.933333-32-32-32s-32 14.933333-32 32v309.333333H170.666667c-17.066667 0-32 14.933333-32 32s14.933333 32 32 32h309.333333V853.333333c0 17.066667 14.933333 32 32 32s32-14.933333 32-32V544H853.333333c17.066667 0 32-14.933333 32-32s-14.933333-32-32-32z" p-id="3668"></path></svg></div><div class="foldingicon icondown iconHide"><svg t="1632474832777" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="3471" width="16" height="16"><path d="M853.333333 544H170.666667c-17.066667 0-32-14.933333-32-32s14.933333-32 32-32h682.666666c17.066667 0 32 14.933333 32 32s-14.933333 32-32 32z" p-id="3472"></path></svg></div></div>');
+                } else {
+                    $(thisItem).next().remove();
+                    $(thisItem).find('a').css('margin-left', '0px');
+                }
+            });
+            $(".level2-nav-container").click(function () {
+                // 点击后子菜单展开其他菜单折叠
+                //$($menu).parent().parent().parent().not($(this)).find(".level2-dd").stop().slideUp(400);
+                $(this).find(".level2-dd").slideToggle(400);
+                $(this).find('.iconright').toggleClass('iconHide');
+                $(this).find('.icondown').toggleClass('iconHide');
+            });
+            $(".level2-nav-container .level2-dt a").click(function () {
+                // 点击后子菜单展开其他菜单折叠
+                //$($menu).parent().parent().parent().not($(this)).find(".level2-dd").stop().slideUp(400);
+                $(this).parent().siblings(".level2-dd").slideToggle(400);
+                $(this).prev().find('.iconright').toggleClass('iconHide');
+                $(this).prev().find('.icondown').toggleClass('iconHide');
+            });
+        });
+
+        $(window).resize(function () {
+            AutoSizeContainerWidth();
+        });
+
+        function AutoSizeContainerWidth() {
+            var windowWidth = $(window).width();
+            var containerWidth = windowWidth * 0.9;
+            $('.sidebar').css('cssText', 'max-width:' + containerWidth * 0.2 + 'px !important');
+            if (windowWidth * 0.2 > 249) {
+                $('.spec-content').css('cssText', 'max-width:' + containerWidth * 0.8 + 'px !important;margin-left: 260px;');
+            } else {
+                $('.spec-content').css('cssText', 'max-width:' + containerWidth * 0.8 + 'px !important;margin-left: ' + (containerWidth * 0.2 + 11) + 'px;');
+            }
+            $('#div_Container').css('cssText', 'max-width:' + containerWidth + 'px !important; margin:0 auto; ');
+        }
+    </script>
+</body>
+
+</html>

@@ -6,6 +6,7 @@ import os
 import sys
 from pathlib import Path
 
+from html_shortspec_format import normalize_short_spec, validate_workbook
 from html_source_rules import feature_values, finalize_short_spec
 
 VENDORED_DEPS = Path(__file__).resolve().parent / "_third_batch_pydeps"
@@ -20,7 +21,7 @@ def collect_html_paths(source_dir: str | None, pattern: str, html_files: list[st
     return paths
 
 
-def write_xlsx(path: Path, rows: list[list[str]]) -> None:
+def write_xlsx(path: Path, rows: list[list[str]], config: str) -> None:
     from openpyxl import Workbook
     from openpyxl.styles import Alignment, Font, PatternFill
     workbook = Workbook()
@@ -28,7 +29,8 @@ def write_xlsx(path: Path, rows: list[list[str]]) -> None:
     sheet.title = "All Products"
     for index, row in enumerate(rows):
         if index:
-            row = [*row[:3], finalize_short_spec(row[3])]
+            raw_ports = (config in {"com", "con", "smb"} and row[2] == "Ports") or (config == "dt" and "Ports" in row[2])
+            row = [*row[:3], normalize_short_spec(row[3] if raw_ports else finalize_short_spec(row[3]))]
         sheet.append(row)
     sheet.freeze_panes = "A2"
     for cell in sheet[1]:
@@ -39,7 +41,18 @@ def write_xlsx(path: Path, rows: list[list[str]]) -> None:
         sheet.column_dimensions[column].width = width
     for row in sheet.iter_rows(min_row=2):
         row[3].alignment = Alignment(wrap_text=True, vertical="top")
-    workbook.save(path)
+    work_dir = path.parent / "_work"
+    work_dir.mkdir(parents=True, exist_ok=True)
+    temporary = work_dir / f"{path.stem}.format_check_{os.getpid()}.xlsx"
+    workbook.save(temporary)
+    workbook.close()
+    issues = validate_workbook(temporary, require_l2_order=True)
+    if issues:
+        for issue in issues:
+            print(f"FORMAT_ISSUE\t{issue.sheet}\t{issue.row}\t{issue.code}\t{issue.message}", file=sys.stderr)
+        raise RuntimeError(f"Final ShortSpec format check found {len(issues)} issue(s): {temporary}")
+    os.replace(temporary, path)
+    print("FORMAT_ISSUES\t0")
 
 
 PRODUCT_RULE_PACKAGES = {
@@ -69,11 +82,14 @@ def main() -> None:
     rows = [["Product", "L1 Feature", "L2 Feature", "Short Spec"]]
     for path in paths:
         html_text = path.read_text(encoding="utf-8-sig", errors="replace")
-        for l1, l2, short_spec in module.generate(feature_values(html_text), html_text):
-            rows.append([product_name(path), l1, l2, short_spec])
+        product_rows = [
+            [product_name(path), l1, l2, short_spec]
+            for l1, l2, short_spec in module.generate(feature_values(html_text), html_text)
+        ]
+        rows.extend(sorted(product_rows, key=lambda row: row[2].casefold()))
     output = Path(args.output_xlsx)
     output.parent.mkdir(parents=True, exist_ok=True)
-    write_xlsx(output, rows)
+    write_xlsx(output, rows, args.config)
     print(f"PRODUCTS\t{len(paths)}")
     print(f"ROWS\t{len(rows)-1}")
     print(f"WORKBOOK\t{output}")

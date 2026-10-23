@@ -1,0 +1,10 @@
+import fs from 'node:fs/promises';
+import { FileBlob, SpreadsheetFile } from '@oai/artifact-tool';
+const p='D:/shortspec_generator/release/third_batch_html_260916/docs/Third_Batch_38_Feature_Matrix.xlsx';
+const wb=await SpreadsheetFile.importXlsx(await FileBlob.load(p));
+const ws=wb.worksheets.getItem('Third Batch Features');
+const check=await wb.inspect({kind:'table',sheetId:'Third Batch Features',range:'A1:G47',tableMaxRows:50,tableMaxCols:7,maxChars:12000});
+console.log(check.ndjson);
+const img=await wb.render({sheetName:'Third Batch Features',range:'A1:G47',scale:1.2,format:'png'});
+await fs.writeFile('D:/shortspec_generator/tmp/matrix_edit/after.png',new Uint8Array(await img.arrayBuffer()));
+console.log('VERIFIED_AND_RENDERED');

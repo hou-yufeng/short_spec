@@ -1,8 +1,24 @@
-说明: 本文档维护了部分简短规格的生成规则, H3标题为简短规格中的Feature, H3下的内容是该Feature简短规格的生成规则, 直到下一个H3标题结束.
+说明: 本文档维护了部分简短规格的生成规则, H3标题为简短规格中的Feature, H3下的内容是该Feature简短规格的生成规则, 直到下一个H3标题结束. 日期更新标题用于记录对应Feature的增量规则.
+
+### 2026-10-19 更新
+
+Power Supply仅Desktop产品线: 依照原规则生成各条目后, 按照HTML Spec源数据顺序拼接为一个短语; 两个条目以" or "连接, 三个或以上条目以", "连接, 单个条目保持原样. 拼接结果只保留最后一个"PSU", 移除其余"PSU".
 
 ### Processor
 
 + 直接从HTML Spec 的Processor Family取值. 如果HTML Spec 的Processor Family存在多个选项, 则以项目列表形式输出
+
+### 2026-10-20
+
++ Commercial产品线: Processor Family每个取值如包含分号";", 只保留第一个分号之前的内容; 其余规则不变.
+
+### 2026-10-20 Commercial 括号更新
+
++ Commercial产品线: 如果HTML Spec的Processor原值包含"-"且以括号结尾, 则移除最后的括号及其中内容. 保留分号截取等其他规则.
+
+### 2026-10-20 Tablets 更新
+
++ Tablets产品线: 从HTML Spec的Processor表格按源数据顺序读取每行的"Processor Name"和"Cores"字段, 每行输出为`Processor Name (Cores)`, 多行分别作为条目输出. 如果没有生成Processor数据, 输出`No data, please check PSREF Spec or contact Short Spec Generation Tools Dev`.
 
 ### AI PC Category
 

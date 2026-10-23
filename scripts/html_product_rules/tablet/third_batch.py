@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import re
 
-from html_source_rules import additional_third_batch_values, dimensions_values, graphics_values, positive_values, remove_parentheses, values_for
+from html_product_rules.pen import pen_short_spec
+from html_source_rules import audio_chip_term, audio_has_multiple_conditions, camera_short_spec, feature_table_rows, feature_table_rows_for_heading, feature_values_for_heading_preserving_lines, positive_values, remove_parentheses, values_for
 
 PRODUCT_LINE = "tablet"
 
 L1 = {
-    "Processor Family": "PERFORMANCE", "Graphics": "PERFORMANCE", "NPU": "PERFORMANCE", "AI PC Category": "PERFORMANCE", "Chipset": "PERFORMANCE",
+    "Processor": "PERFORMANCE", "Graphics": "PERFORMANCE", "NPU": "PERFORMANCE", "AI PC Category": "PERFORMANCE", "Chipset": "PERFORMANCE",
     "Audio": "MULTIMEDIA", "Camera": "MULTIMEDIA", "Battery": "MOBILITY", "Charging Time": "MOBILITY",
     "Power Adapter": "MOBILITY", "Dimensions (WxDxH)": "DESIGN", "Weight": "DESIGN", "Color": "DESIGN",
     "Case Material": "DESIGN", "Material": "DESIGN", "Ports": "CONNECTIVITY", "Ethernet": "CONNECTIVITY",
@@ -31,6 +32,64 @@ def _unique(values: list[str]) -> list[str]:
 def _star(values: list[str], starred: bool) -> list[str]:
     return [value if not starred or value.endswith("*") else value + "*" for value in values]
 
+
+def _security_values(features: dict[str, list[str]], name: str) -> tuple[list[str], bool]:
+    values = values_for(features, name)
+    has_no = any(re.match(r"\s*no\b", value, flags=re.I) for value in values)
+    return [value for value in values if not re.match(r"\s*no\b", value, flags=re.I)], has_no
+
+
+def _ai_pc_category(features: dict[str, list[str]]) -> str:
+    values = values_for(features, "AI PC Category")
+    has_no = any(value.lstrip().casefold().startswith("no") for value in values)
+    return "\n".join(_star(_unique([value for value in values if not value.lstrip().casefold().startswith("no")]), has_no))
+
+def _dimensions(features: dict[str, list[str]], html_text: str | None) -> list[str]:
+    rows = feature_table_rows_for_heading(html_text, "Dimensions (WxDxH)", preserve_linebreaks=True) if html_text else []
+    rows = [row for row in rows if row.get("dimensions")]
+    if not rows:
+        return (feature_values_for_heading_preserving_lines(html_text, "Dimensions (WxDxH)") if html_text else []) or values_for(features, "Dimensions (WxDxH)")
+    if len(rows) == 1:
+        return [rows[0]["dimensions"]]
+    maximum_dimensions: list[tuple[float, str]] = []
+    for row in rows:
+        match = re.search(r"(\d+(?:\.\d+)?)\s*\(maximum\)\s*mm\b", row["dimensions"], flags=re.I)
+        if match:
+            maximum_dimensions.append((float(match.group(1)), row["dimensions"]))
+    if maximum_dimensions:
+        return [f"Starting at:\n{min(maximum_dimensions, key=lambda item: item[0])[1]}"]
+    return [f"{row.get('models', '')}:\n{row['dimensions']}" for row in rows]
+
+
+def _weight(features: dict[str, list[str]], html_text: str | None) -> list[str]:
+    rows = feature_table_rows_for_heading(html_text, "Weight", preserve_linebreaks=True) if html_text else []
+    if rows:
+        return [
+            f"{row['models']}: {row['weight'][0].lower()}{row['weight'][1:]}"
+            for row in rows
+            if row.get("models") and row.get("weight")
+        ]
+    return (feature_values_for_heading_preserving_lines(html_text, "Weight") if html_text else []) or values_for(features, "Weight")
+
+
+def _graphics(features: dict[str, list[str]], html_text: str | None) -> list[str]:
+    return values_for(features, "Graphics")
+
+def _chipset(features: dict[str, list[str]]) -> str:
+    return ""
+
+def _controls(features: dict[str, list[str]]) -> str:
+    return ""
+
+def _multi_mode(features: dict[str, list[str]], html_text: str | None) -> str:
+    values = (feature_values_for_heading_preserving_lines(html_text, "Multi-mode") if html_text else []) or values_for(features, "Multi-mode")
+    values = [line for value in values for line in value.splitlines() if line.strip()]
+    if not values or all(value.lstrip().casefold().startswith("no") for value in values):
+        return ""
+    return "\n".join(_unique([value.split(":", 1)[0] for value in values]))
+
+def _touchpad(features: dict[str, list[str]]) -> str:
+    return ""
 
 def _battery(features: dict[str, list[str]], tablet: bool) -> str:
     values = values_for(features, "Battery")
@@ -63,44 +122,74 @@ def _battery(features: dict[str, list[str]], tablet: bool) -> str:
 
 
 def _audio(features: dict[str, list[str]], mode: str) -> str:
-    names = ["Speakers", "Microphone"] if mode == "tablet" else ["Audio Chip", "Speakers", "Microphone"]
-    out=[]
-    for name in names:
-        values = values_for(features, name)
-        positive, no = positive_values(values)
-        for value in (values if mode == "dt" else positive):
-            value = re.sub(r"\s*optimized with\s*", " ", value, flags=re.I)
-            if name == "Audio Chip" and mode != "dt":
-                match=re.search(r"(High Definition \(HD\) Audio|SoundWire)",value,re.I)
-                if not match: continue
-                value=match.group(1)
-            out.append(value + ("*" if name == "Microphone" and no and not value.endswith("*") else ""))
+    out: list[str] = []
+    chips = values_for(features, "Audio Chip")
+    multiple_conditions = audio_has_multiple_conditions(chips)
+    for value in chips:
+        out.append(audio_chip_term(value, multiple_conditions) or value)
+    for name in ("Speakers", "Microphone"):
+        positive, no = positive_values(values_for(features, name))
+        out.extend(_star(positive, no))
     return "\n".join(_unique(out))
 
 
 def _wwan(features: dict[str, list[str]]) -> str:
-    values=values_for(features,"WWAN"); generations=[]
-    for value in values:
-        for generation in ("6G","5G","4G"):
-            if generation.casefold() in value.casefold(): generations.append(generation); break
-    if not generations: return ""
-    generation=max(generations,key=lambda x:int(x[0])); matching=[x for x in values if generation.casefold() in x.casefold()]
-    sub=any("sub-6 ghz" in x.casefold() for x in matching); esim=any("with embedded esim" in x.casefold() for x in matching)
-    if sub and esim: return f"WWAN upgradable to {generation} Sub-6 GHz with embedded eSIM"
-    return "\n".join([f"WWAN upgradable to {generation} Sub-6 GHz"] if sub else [] + [f"WWAN upgradable to {generation} with embedded eSIM"] if esim else [f"WWAN upgradable to {generation}"])
+    values, has_no = positive_values(values_for(features, "WWAN"))
+    return "\n".join(_star(values, has_no))
 
 
-def _security(features: dict[str, list[str]], workstation: bool) -> str:
-    if not workstation: return ""
-    out=[]; chip=values_for(features,"Security Chip")
+def _location_services(features: dict[str, list[str]], html_text: str | None) -> str:
+    rows = feature_table_rows_for_heading(html_text, "Location Services", preserve_linebreaks=True) if html_text else []
+    if rows:
+        has_no = any(row.get("location", "").lstrip().casefold().startswith("no") for row in rows)
+        values = [
+            f"{row['models']}: {row['location']}"
+            for row in rows
+            if row.get("models") and row.get("location") and not row["location"].lstrip().casefold().startswith("no")
+        ]
+    else:
+        values, has_no = positive_values(values_for(features, "Location Services"))
+    return "\n".join(_star(values, has_no))
+
+
+def _security(features: dict[str, list[str]]) -> str:
+    out: list[str] = []
+    if any(value.lstrip().startswith("ThinkShield is a comprehensive security solution") for value in values_for(features, "ThinkShield")):
+        out.append("ThinkShield")
+    chip, _ = _security_values(features, "Security Chip")
     if any("discrete tpm 2.0" in x.casefold() for x in chip): out.append("Discrete TPM 2.0")
     elif any("firmware tpm 2.0" in x.casefold() for x in chip): out.append("Firmware TPM 2.0")
-    for name in ("Physical Locks","Chassis Intrusion Switch","Fingerprint Reader"):
-        positive,no=positive_values(values_for(features,name))
-        for value in positive:
-            value=remove_parentheses(value.split(",",1)[0]) if name=="Physical Locks" else value
-            if "optional" in value.casefold() or no: value += "*" if not value.endswith("*") else ""
-            out.append(value)
+
+    physical_locks, _ = _security_values(features, "Physical Locks")
+    for value in physical_locks:
+        optional = "optional" in value.casefold()
+        value = remove_parentheses(value.split(",", 1)[0])
+        if value:
+            out.append(value + ("*" if optional else ""))
+
+    smart_card_readers, has_no_smart_card_reader = _security_values(features, "Smart Card Reader")
+    out.extend(_star(smart_card_readers, has_no_smart_card_reader))
+
+    fingerprint_readers, has_no_fingerprint_reader = _security_values(features, "Fingerprint Reader")
+    for value in fingerprint_readers:
+        match_on_chip = "match-on-chip" in value.casefold()
+        match = re.search(r"fingerprint reader", value, flags=re.I)
+        if match:
+            value = value[:match.end()].rstrip()
+            if match_on_chip:
+                value = value[:match.start()] + "MOC " + value[match.start():]
+        if has_no_fingerprint_reader:
+            value += "*"
+        out.append(value)
+
+    model_note = r"\s*\(\s*(?:[^()]*\bmodels?|\bmodels?\b[^()]*)\s*\)"
+    other_security, _ = _security_values(features, "Other Security")
+    for value in other_security:
+        optional = "optional" in value.casefold() or bool(re.search(model_note, value, flags=re.I))
+        value = re.sub(r"\s*\(Optional\)", "", value, flags=re.I)
+        value = re.sub(model_note, "", value, flags=re.I)
+        value = value.replace(" Image Signal Processor (ISP)", " ISP")
+        out.extend(_star([value], optional))
     return "\n".join(_unique(out))
 
 
@@ -114,6 +203,8 @@ def _ethernet(features: dict[str, list[str]], dt: bool, ts: bool) -> str:
     for value in values:
         rates=[]
         for needle, output in (("Dual 2.5GbE","2x 2.5GbE"),("Dual Gigabit Ethernet","2x Gigabit Ethernet"),("10GbE","10GbE"),("2.5GbE","2.5GbE"),("Gigabit Ethernet","Gigabit Ethernet")):
+            if needle in ("2.5GbE", "Gigabit Ethernet") and f"Dual {needle}".casefold() in value.casefold():
+                continue
             if needle.casefold() in value.casefold() and output not in rates: rates.append(output)
         ports=re.findall(r"\b\d+x\s*RJ-45\b",value,re.I)
         if rates: rendered.append(" + ".join(rates)+(f", {ports[0]}" if ports else ""))
@@ -142,32 +233,48 @@ def generate(features: dict[str, list[str]], html_text: str | None = None) -> li
     rows: list[tuple[str,str,str]]=[]
     def add(name: str, value: str, l1: str | None = None) -> None:
         if value: rows.append((l1 or L1.get(name,"SPECIAL FEATURES"),name,value))
-    for name in ("Processor Family","AI PC Category","NPU"):
-        add(name,"\n".join(_unique(values_for(features,name))))
-    add("Graphics", "\n".join(graphics_values(features, html_text, PRODUCT_LINE)))
+    processor_rows = feature_table_rows(html_text, "Processor") if html_text else []
+    processor = [
+        f"{row['processor name']} ({row['cores']})"
+        for row in processor_rows
+        if row.get("processor name") and row.get("cores")
+    ]
+    add("Processor", "\n".join(processor) or "No data, please check PSREF Spec or contact Short Spec Generation Tools Dev")
+    npu = []
+    for value in values_for(features, "NPU"):
+        if re.search(r"\(optional\)", value, flags=re.I):
+            value = re.sub(r"\(optional\)", "", value, flags=re.I).strip()
+            value += "" if value.endswith("*") else "*"
+        npu.append(value)
+    add("NPU", "\n".join(_unique(npu)))
+    add("AI PC Category", _ai_pc_category(features))
+    add("Graphics", "\n".join(_graphics(features, html_text)))
     add("Audio",_audio(features,"dt" if dt else "tablet" if tablet else "mobile"))
     if not ts:
-        camera,no=positive_values(values_for(features,"Camera")); camera=[remove_parentheses(x).replace("Computer Vision on Image Signal Processor", "CV on ISP") for x in camera]
-        add("Camera","\n".join(_star(camera,no)))
+        add("Camera", camera_short_spec(values_for(features, "Camera"), PRODUCT_LINE))
     if not dt and not ts: add("Battery",_battery(features,tablet))
     for name in ("Bundled Accessories","Buttons","Charging Time","Cellular Bands","FM Radio","Location Services","Sensors","Wi-Fi Direct","Wi-Fi Display"):
         if (name in {"Bundled Accessories","Buttons","Charging Time","Cellular Bands","FM Radio","Location Services","Sensors","Wi-Fi Direct","Wi-Fi Display"} and not tablet): continue
+        if name == "Location Services":
+            add(name, _location_services(features, html_text))
+            continue
         vals,no=positive_values(values_for(features,name));
         if name in {"Bundled Accessories","FM Radio","Wi-Fi Direct","Wi-Fi Display","Sensors"} and not vals: continue
         value="\n".join(_star(_unique(vals), no if name=="Bundled Accessories" else False))
         if name=="Cellular Bands" and value: value="For WWAN models:\n"+value
-        if name=="Location Services": value="\n".join(_unique([p.strip() + ("*" if "+" not in x and p.strip() else "") for x in vals for p in x.split("+") if not p.strip().casefold().startswith("no")]))
         add(name,value)
     for source,name in (("Case Color","Color"),("Case Material","Case Material"),("Material","Material"),("Dimensions (WxDxH)","Dimensions (WxDxH)"),("Weight","Weight")):
         if name=="Case Material" and not (mobile or tablet): continue
         if name=="Material" and tablet: continue
-        values = dimensions_values(features, html_text) if name == "Dimensions (WxDxH)" else values_for(features, source)
-        add(name,"\n".join(_unique(values)))
+        if name == "Dimensions (WxDxH)":
+            add(name, "\n".join(_dimensions(features, html_text)))
+        elif name == "Weight":
+            add(name, "\n".join(_weight(features, html_text)))
+        else:
+            add(name,"\n".join(_unique(values_for(features, source))))
     if not ts:
         values,no=positive_values(values_for(features,"NFC")); add("NFC","\n".join(_star(_unique(values),no)))
-        values,no=positive_values(values_for(features,"Pen"));
-        if values: add("Pen","\n".join(_star(_unique([remove_parentheses(re.split(r"\bwith\b|\bfor\b|,",x,1,flags=re.I)[0]) for x in values]),True)))
-        elif no: add("Pen","\n".join(_unique(values_for(features,"Pen"))))
+        add("Pen", pen_short_spec(values_for(features, "Pen")))
         add("WWAN",_wwan(features))
     if mobile or tablet:
         values,no=positive_values(values_for(features,"Power Adapter")); cleaned=[]
@@ -177,18 +284,21 @@ def generate(features: dict[str, list[str]], html_text: str | None = None) -> li
         add("Power Adapter","\n".join(_star(_unique(cleaned),no or len(cleaned)>1)))
     add("Ports", _ports(features, mobile, tablet, dt, ts))
     add("Ethernet", _ethernet(features, dt, ts))
-    if dt or ts: add("Security",_security(features,True))
+    add("Security", _security(features))
     if PRODUCT_LINE in {"commercial_laptop","desktop","thinkstation"}:
         values=values_for(features,"Base Warranty"); candidates=[x for x in values if re.match(r"\d",x)]
         if candidates: add("Base Warranty","Up to "+max(candidates,key=lambda x:float(re.match(r"\d+(?:\.\d+)?",x).group())))
     values,no=positive_values(values_for(features,"Green Certifications")); cleaned=[]
     for x in values:
-        x=remove_parentheses(x.split(". ",1)[0]); cleaned.append(x+("*" if "optional" in x.casefold() else ""))
+        optional = "optional" in x.casefold()
+        x=remove_parentheses(x.split(". ",1)[0]); cleaned.append(x+("*" if optional else ""))
     add("Green Certifications","\n".join(_unique(cleaned)))
     if ts: add("ISV Certifications",'<p>Please visit <a href="www.thinkworkstations.com/isv-certifications/" target="_blank">ISV certifications for Lenovo Workstations</a></p>')
     if PRODUCT_LINE in {"commercial_laptop","desktop","thinkstation"}:
         values,no=positive_values(values_for(features,"System Management")); add("System Management","\n".join(_star(_unique([remove_parentheses(x) for x in values]),no)))
     if not ts: add("Screen-to-Body Ratio","\n".join(_unique(values_for(features,"Screen-to-Body Ratio"))))
-    for name, value in additional_third_batch_values(features, PRODUCT_LINE):
-        add(name, value)
+    add("Chipset", _chipset(features))
+    add("Controls", _controls(features))
+    add("Multi-mode", _multi_mode(features, html_text))
+    add("Touchpad", _touchpad(features))
     return rows

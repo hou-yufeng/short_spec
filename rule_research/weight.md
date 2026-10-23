@@ -1,4 +1,4 @@
-1. 所有产品线都需要Weight简短规格, 除非HTML Spec没有Weight.
-2. 读取HTML Spec的Weight信息, 源信息以HTML表格形式呈现.
-3. 当HTML表格的数据仅包含一行数据, 且数据Models字段仅有"All models", 则直接读取表格的Weight字段信息并作为Weight的简短规格信息.
-4. 当HTML表格的数据包含一行或多行数据, 且数据Models字段没有"All models", 则Weight简短规格信息生成格式为:每行数据的Models字段信息加冒号和空格": "再加上Weight字段的数据. 每行数据都作为单独一行.
+1. 所有产品线的 Weight 简短规格均从 PSREF HTML Spec 的 Weight 取值；HTML Spec 没有 Weight 时不生成该项。
+2. 如果 Weight 信息以表格呈现，按 HTML Spec 原有行序逐行读取。每行输出“Models 字段数据”+冒号和一个空格“: ”+“Weight 字段数据”，仅将 Weight 字段数据的首字母改为小写。
+3. 如果 Weight 信息以条目呈现，则按 HTML Spec 原样输出条目。
+4. 保留 HTML Spec 中 Weight 内容的换行。
